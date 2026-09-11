@@ -1,0 +1,2494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>考研英语长难句分析工具 · DeepSeek</title>
+<style>
+:root{
+  --ink:#1c2333; --ink2:#5b6472; --line:#e8e6e1; --bg:#faf9f7; --card:#ffffff;
+  --accent:#b4590a; --accent-soft:#fdf3e7;
+  --shadow:0 1px 2px rgba(28,35,51,.05),0 4px 16px rgba(28,35,51,.06);
+  --shadow-lg:0 18px 50px rgba(28,35,51,.14);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --topbar-h:56px; --legend-h:35px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);font-size:15px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.serif{font-family:Georgia,"Times New Roman","Songti SC",serif}
+::selection{background:#f7e3c8}
+body.font-prose .annotated{font-family:Georgia,"Times New Roman",serif}
+body.font-sans .annotated{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;font-size:16px}
+
+/* ---------- 顶栏 ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.topbar-inner{max-width:1340px;margin:0 auto;padding:0 20px;height:var(--topbar-h);display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;letter-spacing:.2px;white-space:nowrap;flex:0 0 auto}
+.logo-mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#b4590a,#d97706);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800;font-family:Georgia,serif;flex:0 0 auto}
+.logo small{font-weight:400;color:var(--ink2);font-size:12px;margin-left:2px}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 13px;border-radius:8px;font-size:13px;color:var(--ink2);border:1px solid var(--line);background:#fff;transition:transform .14s var(--ease),background .16s,border-color .16s,color .16s,box-shadow .16s;white-space:nowrap}
+.btn:hover{border-color:#d0ccc4;color:var(--ink);background:#fbfaf8;transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.primary:hover{background:#000}
+.btn.accent{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 10px rgba(180,89,10,.22)}
+.btn.accent:hover{background:#9a4c08}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn.sm{padding:5px 10px;font-size:12.5px}
+/* 顶栏图标按钮：文字全部收进 title，避免按钮把顶栏挤出去 */
+.btn.ico{width:34px;height:34px;padding:0;font-size:14px;line-height:1;flex:0 0 auto}
+/* 垃圾桶图标：自绘 SVG，形状稳定、不依赖 emoji 字体 */
+.btn.ico svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.seg-toggle{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff;flex:0 0 auto}
+.seg-toggle button{padding:7px 10px;font-size:12.5px;color:var(--ink2);transition:background .16s,color .16s;white-space:nowrap}
+.seg-toggle button.on{background:var(--ink);color:#fff}
+@media(max-width:1160px){ .logo small{display:none} }
+@media(max-width:1080px){ #fontBtn{display:none} }
+
+/* ---------- 图例栏 ---------- */
+.legend{position:fixed;top:var(--topbar-h);left:0;right:0;z-index:99;background:rgba(250,249,247,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.legend-inner{max-width:1240px;margin:0 auto;padding:7px 24px;display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none}
+.legend-inner::-webkit-scrollbar{display:none}
+.legend-title{font-size:12px;color:var(--ink2);white-space:nowrap;margin-right:4px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:12px;white-space:nowrap;border:1px solid transparent;cursor:pointer;transition:box-shadow .15s,transform .15s var(--ease);user-select:none}
+.chip .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.chip:hover{transform:translateY(-1px)}
+.chip.active{box-shadow:inset 0 0 0 1.5px currentColor}
+
+/* ---------- 主布局 ---------- */
+.layout{max-width:1240px;margin:0 auto;padding:128px 24px 80px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:36px;align-items:start}
+@media(max-width:960px){.layout{grid-template-columns:1fr;padding-top:124px}}
+
+/* ---------- 输入面板 ---------- */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.panel-tabs{display:flex;border-bottom:1px solid var(--line)}
+.panel-tabs button{flex:1;padding:13px;font-size:14px;color:var(--ink2);border-bottom:2px solid transparent;transition:all .16s}
+.panel-tabs button:hover{background:#fcfbf9;color:var(--ink)}
+.panel-tabs button.on{color:var(--ink);font-weight:600;border-bottom-color:var(--accent)}
+.panel-body{padding:18px}
+#articleInput{width:100%;min-height:220px;border:1px solid var(--line);border-radius:10px;padding:14px;font-family:Georgia,serif;font-size:15px;line-height:1.7;resize:vertical;color:var(--ink);outline:none;transition:border .16s,box-shadow .16s;background:#fff}
+#articleInput:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,89,10,.08)}
+.dropzone{border:1.5px dashed #d5d1c9;border-radius:10px;padding:34px 20px;text-align:center;color:var(--ink2);font-size:14px;cursor:pointer;transition:all .18s var(--ease);background:#fcfbf9}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);transform:scale(1.005)}
+.dropzone .dz-icon{font-size:26px;margin-bottom:8px}
+.dropzone small{display:block;margin-top:6px;font-size:12px;color:#9aa0ab}
+.img-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.img-item{position:relative;width:96px;height:96px;border-radius:8px;overflow:hidden;border:1px solid var(--line);animation:pop .28s var(--ease)}
+.img-item img{width:100%;height:100%;object-fit:cover;display:block}
+.img-item .rm{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.img-item .rm:hover{background:rgba(0,0,0,.85)}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.panel-foot{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid var(--line);background:#fcfbf9;flex-wrap:wrap}
+.hint{font-size:12px;color:#9aa0ab}
+.status{font-size:13px;color:var(--ink2);transition:color .2s}
+.status.err{color:#c23030}
+.status.ok{color:#2c7a4b}
+.status.busy{color:var(--accent)}
+
+/* ---------- 进度条 ---------- */
+.progress-wrap{display:none;padding:0 18px 16px}
+.progress-wrap.show{display:block;animation:fadeIn .25s var(--ease)}
+.progress-track{height:6px;border-radius:3px;background:#efece6;overflow:hidden}
+.progress-bar{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg,#d97706,#b4590a);transition:width .35s var(--ease)}
+.progress-bar.busy{background-size:200% 100%;background-image:linear-gradient(90deg,#d97706,#f0a34a,#b4590a);animation:slide 1.4s linear infinite}
+@keyframes slide{from{background-position:0 0}to{background-position:-200% 0}}
+.progress-text{font-size:12px;color:var(--ink2);margin-top:6px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ---------- 文章区 ---------- */
+.article-head{display:flex;align-items:baseline;gap:12px;margin:34px 0 6px;flex-wrap:wrap}
+.article-head h2{font-size:19px;font-weight:700}
+.article-head .meta{font-size:12px;color:#9aa0ab}
+.article{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:26px 34px}
+.para+.para{margin-top:18px}
+.prose{font-family:Georgia,"Times New Roman",serif;font-size:16.5px;line-height:1.9;color:var(--ink);text-align:justify}
+.p-sent{cursor:pointer;border-radius:4px;transition:background .14s}
+.p-sent:hover>.p-text{background:#f3efe6}
+.p-sent.open>.p-text,.p-sent.open>.p-num{display:none}
+.p-num{font-family:-apple-system,"PingFang SC",sans-serif;font-size:10px;color:#b6bcc7;vertical-align:super;margin-right:2px;user-select:none;transition:color .14s}
+.p-sent:hover .p-num{color:var(--accent)}
+.p-detail{display:none;margin:12px 0 16px;padding:16px 18px;background:#fbfaf7;border:1px solid var(--line);border-radius:12px;cursor:default}
+/* 只有 .open 才展开详情；.has-detail 仅用于打印（详见 @media print），
+   否则折叠后详情仍然显示 —— 这就是"折叠不起来"的原因 */
+.p-sent.open .p-detail{display:block}
+.p-sent.open .p-detail{animation:reveal .3s var(--ease)}
+@keyframes reveal{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.sent-error{color:#c23030;font-size:13px;padding:8px 0;line-height:1.7}
+.sent-error button{color:var(--accent);text-decoration:underline;font-size:13px}
+.sent-skeleton{display:flex;flex-direction:column;gap:9px;padding:4px 0}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+.sk{height:12px;border-radius:6px;background:linear-gradient(90deg,#efece6 25%,#f8f6f2 37%,#efece6 63%);background-size:200% 100%;animation:shimmer 1.3s linear infinite}
+.sk.w90{width:90%}.sk.w70{width:70%}.sk.w50{width:50%}
+
+/* ---------- 整句翻译 ---------- */
+.trans{margin-top:12px;padding:10px 14px;background:#f6f4ef;border-left:3px solid #d9d2c4;border-radius:0 8px 8px 0;font-size:14px;line-height:1.75;color:#454e5c;animation:fadeIn .3s var(--ease)}
+.trans-tag{display:inline-block;font-size:11px;color:#fff;background:#a8a29e;border-radius:4px;padding:1px 7px;margin-right:9px;vertical-align:1px;user-select:none}
+body.hide-trans .trans{display:none}
+.p-detail .detail-tools{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;padding-top:8px;border-top:1px dashed #eceae4}
+.mini-btn{font-size:11.5px;color:#9aa0ab;padding:3px 8px;border-radius:6px;border:1px solid transparent;transition:all .15s}
+.mini-btn:hover{color:var(--accent);border-color:var(--line);background:#fff}
+
+/* ---------- 逐词标注 ---------- */
+.annotated{font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:2.45;color:var(--ink)}
+.seg-wrap{padding:3px 1px;border-radius:6px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.unit{display:inline-flex;flex-direction:column;justify-content:flex-start;vertical-align:bottom;position:relative;margin:0 .5px;border-radius:5px;transition:opacity .2s var(--ease)}
+.unit.dim{opacity:.2}
+.unit .w{padding:0 4px;border-radius:5px;transition:filter .14s,box-shadow .14s;line-height:1.6;font-synthesis:none}
+.unit.clickable{cursor:pointer}
+.unit.clickable:hover .w{filter:brightness(.93)}
+/* 单击选中：荧光笔式涂黄（不再是描边方框），同一时刻只保留一处 */
+.unit.picked .w{
+  background-image:linear-gradient(100deg,rgba(255,233,120,0) .6%,rgba(255,229,96,.95) 3.5%,rgba(255,214,51,.92) 96%,rgba(255,240,160,.5));
+  background-size:102% 90%;background-position:center;background-repeat:no-repeat;
+  border-radius:2px 5px 3px 4px;
+}
+.unit.picked .w[style*="font-style:italic"]{font-style:normal}   /* 荧光笔不斜，更像记号笔涂抹 */
+.unit.picked .w{animation:markIn .34s var(--ease)}
+@keyframes markIn{from{background-size:0% 90%}to{background-size:102% 90%}}
+/* 切换显示模式时临时关掉过渡：否则 .gloss 的 opacity 会从 1 过渡到 0，
+   过渡期间它是可见的 —— 于是所有小气泡"一瞬间全冒出来"。
+   加这个类 → 强制重排 → 下一帧移除，过渡来不及补间就已经落到终态。 */
+body.pref-no-anim .unit,
+body.pref-no-anim .unit .w,
+body.pref-no-anim .unit .gloss{transition:none!important}
+.unit.has-gloss .w{border-bottom:1.5px dashed #c9c4ba}
+.unit .gloss{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:11px;line-height:1.25;color:#8a919e;white-space:nowrap;text-align:center;padding:0 2px;user-select:none;pointer-events:none;position:absolute;top:calc(100% + 2px);left:50%;transform:translateX(-50%);z-index:5;transition:opacity .16s}
+body.no-gloss .unit .gloss{display:none}
+body.no-gloss .unit.has-gloss .w{border-bottom-color:transparent}
+body.mode-hover .annotated{line-height:2.0}
+body.mode-hover .unit .gloss{display:block;opacity:0;visibility:hidden;top:100%;background:#22293a;color:#fff;padding:3px 8px;border-radius:5px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:opacity .16s,visibility .16s}
+body.mode-hover .unit:hover .gloss{opacity:1;visibility:visible}
+
+/* ---------- 侧栏词表 ---------- */
+.sidebar{position:sticky;top:128px}
+.side-card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.side-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:8px}
+.side-head h3{font-size:15px;font-weight:700}
+.side-head span{font-size:12px;color:#9aa0ab}
+.side-cols{display:grid;grid-template-columns:1fr 1fr;max-height:calc(100vh - 220px);overflow-y:auto;overscroll-behavior:contain}
+.side-col+.side-col{border-left:1px solid var(--line)}
+.side-col-head{position:sticky;top:0;z-index:2;padding:10px 12px;font-size:12.5px;font-weight:700;color:var(--ink2);background:#fcfbf9;border-bottom:1px solid var(--line)}
+.side-col-head span{color:#9aa0ab;font-weight:400;margin-left:4px}
+.vi{padding:8px 12px;border-bottom:1px solid #f4f2ee;cursor:pointer;transition:background .14s,transform .14s var(--ease)}
+.vi:hover{background:var(--accent-soft)}
+.vi:active{transform:scale(.99)}
+.vw{font-family:Georgia,serif;font-weight:600;font-size:13px;color:var(--ink);word-break:break-word}
+.vp{color:#b0a08a;font-size:11px;margin-left:4px;font-style:italic}
+.vt{color:var(--ink2);font-size:11.5px;line-height:1.45;margin-top:1px}
+.side-empty{padding:24px 12px;text-align:center;color:#9aa0ab;font-size:12px;line-height:1.8}
+
+/* ---------- 弹窗 ---------- */
+.modal-mask{position:fixed;inset:0;z-index:300;background:rgba(20,24,35,.45);display:none;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s var(--ease)}
+.modal-mask.show{display:flex}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:440px;padding:26px;box-shadow:var(--shadow-lg);animation:modalIn .26s var(--ease);max-height:86vh;overflow-y:auto}
+@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.modal h3{font-size:17px;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:14px}
+.modal a{color:var(--accent)}
+.modal input{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:14px;outline:none;font-family:ui-monospace,monospace;transition:border .16s,box-shadow .16s}
+.modal input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,89,10,.08)}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
+.modal-foot .spacer{margin-right:auto}
+.key-tip{font-size:12px;color:#9aa0ab;margin-top:-8px;margin-bottom:12px}
+
+/* ---------- 缓存管理弹窗 ---------- */
+.cache-modal{max-width:460px;position:relative}
+.cache-modal .tt-close{position:absolute;top:14px;right:16px;color:#9aa0ab;font-size:15px}
+.cache-stat{background:#f8f7f4;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.9;color:var(--ink2);margin-bottom:14px}
+.cache-stat b{color:var(--ink);font-size:15px}
+.cache-actions{display:flex;gap:10px;flex-wrap:wrap}
+.cache-msg{font-size:12.5px;color:#2c7a4b;min-height:18px;margin-top:10px}
+.cache-msg.err{color:#c23030}
+
+/* ---------- 单词详解弹窗 ---------- */
+.word-modal{max-width:520px;position:relative;text-align:left}
+.word-modal .tt-close{position:absolute;top:14px;right:16px;color:#9aa0ab;font-size:15px;transition:color .15s}
+.word-modal .tt-close:hover{color:var(--ink)}
+#wmWord{font-family:Georgia,"Times New Roman",serif;font-size:22px;margin-bottom:8px;padding-right:26px;word-break:break-word}
+.wm-sent{font-family:Georgia,"Times New Roman",serif;font-style:italic;color:#8a919e;font-size:13px;line-height:1.6;margin-bottom:14px;border-left:3px solid var(--line);padding-left:10px}
+.wm-sec{margin-bottom:14px}
+.wm-sec h4{font-size:13px;color:var(--accent);margin-bottom:5px}
+.wm-sec p{font-size:14px;line-height:1.75;color:var(--ink);margin:0}
+.wm-ex{margin:8px 0;padding:9px 13px;background:#f8f7f4;border-radius:8px}
+.wm-ex .en{font-family:Georgia,"Times New Roman",serif;font-size:14px;line-height:1.6}
+.wm-ex .zh{font-size:13px;color:var(--ink2);margin-top:3px;line-height:1.6}
+.wm-loading{color:#9aa0ab;font-size:14px;padding:18px 0;text-align:center}
+.wm-loading::after{content:'';display:block;height:3px;width:60%;margin:12px auto 0;border-radius:2px;background:linear-gradient(90deg,#efece6,#d97706,#efece6);background-size:200% 100%;animation:slide 1.2s linear infinite}
+.wm-err{color:#c23030;font-size:13px}
+.wm-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:1px dashed #eceae4}
+.wm-meta .mini-btn{margin-left:auto}
+
+/* ---------- 提示词设置弹窗 ---------- */
+.prompt-modal{max-width:680px;position:relative}
+.prompt-modal .tt-close{position:absolute;top:14px;right:16px;color:#9aa0ab;font-size:15px}
+.prompt-modal textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:13px;line-height:1.65;font-family:ui-monospace,Consolas,monospace;color:var(--ink);outline:none;resize:vertical;transition:border .16s,box-shadow .16s}
+.prompt-modal textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,89,10,.08)}
+.ph-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 12px}
+.ph-chip{font-size:12px;font-family:ui-monospace,Consolas,monospace;padding:3px 9px;border-radius:20px;border:1px solid var(--line);background:#fcfbf9;color:var(--accent);cursor:pointer;transition:background .15s,border-color .15s}
+.ph-chip:hover{background:var(--accent-soft);border-color:#e6d5be}
+.ph-chip.locked{color:#9aa0ab;cursor:default;background:#f6f5f2}
+.prompt-field{margin-bottom:14px}
+.prompt-field label{display:block;font-size:12.5px;color:var(--ink2);margin-bottom:6px}
+.prompt-field label b{color:var(--ink)}
+.prompt-note{font-size:12px;color:#9aa0ab;line-height:1.7;margin:-6px 0 12px}
+.prompt-note.warn{color:#c23030}
+.prompt-adv{border:1px solid var(--line);border-radius:10px;padding:0 12px;margin-bottom:14px}
+.prompt-adv>summary{cursor:pointer;font-size:12.5px;color:var(--ink2);padding:10px 0;list-style:none}
+.prompt-adv>summary::-webkit-details-marker{display:none}
+.prompt-adv>summary::before{content:'▸ ';color:#b0b6c0}
+.prompt-adv[open]>summary::before{content:'▾ '}
+.prompt-adv .prompt-field{margin-top:4px}
+#pfPreview{background:#141821;color:#dfe6f2;border-radius:10px;padding:12px 14px;font:12px/1.7 ui-monospace,Consolas,monospace;white-space:pre-wrap;max-height:230px;overflow:auto;margin:0}
+#pfPreview .ph{color:#ffca7a}
+
+/* ---------- 空状态 ---------- */
+.empty-article{text-align:center;padding:70px 20px;color:#9aa0ab;animation:fadeIn .4s var(--ease)}
+.empty-article .big{font-size:38px;margin-bottom:12px}
+.empty-article p{font-size:14px;line-height:1.9}
+.footer-note{max-width:1240px;margin:0 auto;padding:0 24px 40px;color:#b0b6c0;font-size:12px;text-align:center}
+
+/* ============================================================
+   多端适配：手机 / 平板
+   要点：顶栏改成"常用几个 + 更多菜单"，侧栏收成底部抽屉，
+        字号与留白按屏宽递减，触屏补上"长按查词"。
+   ============================================================ */
+/* 更多菜单（默认隐藏，仅窄屏显示） */
+.more-wrap{position:relative;flex:0 0 auto}
+.more-menu{display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:120;min-width:168px;
+  background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;animation:fadeIn .14s var(--ease)}
+.more-menu.show{display:block}
+.more-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border-radius:8px;
+  font-size:13.5px;color:var(--ink2);text-align:left;white-space:nowrap}
+.more-menu button:hover{background:var(--accent-soft);color:var(--accent)}
+.more-menu .sep{height:1px;background:var(--line);margin:5px 6px}
+.more-menu .cap{font-size:11.5px;color:#b0b6c0;padding:6px 12px 2px}
+
+/* 平板窄屏（≤900px）：顶栏放不下那么多图标，次要功能收进"更多"
+   这一段必须排在上面那条 .more-menu 规则之后，否则同权重会压不住 */
+@media(max-width:900px){
+  #modeToggle{display:none}
+  #transBtn,#glossBtn,#fontBtn,#printBtn,#cacheBtn,#promptBtn{display:none}
+  .more-wrap{display:block}
+}
+
+/* 平板：收紧留白与字号 */
+@media(max-width:960px){
+  :root{--topbar-h:52px}
+  .topbar-inner{padding:0 14px;gap:8px}
+  .legend-inner{padding:6px 14px}
+  .layout{padding:120px 14px 60px;gap:24px}
+  .article{padding:20px 18px}
+  .prose{font-size:16px;line-height:1.85}
+  .annotated{font-size:16px;line-height:2.3}
+  .panel-body{padding:14px}
+  .side-cols{max-height:none}
+  #articleInput{min-height:180px}
+}
+/* 手机：进一步压缩，侧栏变底部抽屉 */
+@media(max-width:720px){
+  html{-webkit-text-size-adjust:100%}
+  .logo{font-size:14px}
+  .logo small{display:none}
+
+  .layout{padding:110px 10px 56px}
+  .article{padding:16px 12px;border-radius:12px}
+  .article-head{margin:24px 0 6px}
+  .article-head h2{font-size:17px}
+  .prose{font-size:15.5px;text-align:left}     /* 手机上两端对齐会出现大空隙 */
+  .annotated{font-size:15.5px;line-height:2.15}
+  .unit .w{padding:0 2px}
+  .unit .gloss{font-size:10px}
+  .p-detail{padding:12px 10px;margin:10px 0 14px}
+  .trans{font-size:13.5px;padding:9px 11px}
+  .panel-tabs button{padding:12px 8px;font-size:13.5px}
+  #articleInput{min-height:150px;font-size:14px}
+  .panel-foot{padding:12px;gap:8px}
+  .panel-foot .btn{padding:9px 14px}
+  .dropzone{padding:24px 14px}
+  .img-item{width:78px;height:78px}
+  .modal{padding:20px;border-radius:14px;max-height:88dvh}
+  .modal-foot .btn{padding:10px 16px}
+  .legend-title{display:none}
+  .chip{padding:4px 10px}
+  .footer-note{padding:0 14px 28px}
+  .script-context{display:none}
+
+  /* 侧栏（核心词汇）收成底部抽屉，默认收起只露一条标题 */
+  .sidebar{position:static;margin-top:6px}
+  .side-card{border-radius:12px}
+  .side-head{cursor:pointer;user-select:none}
+  .side-head::after{content:'展开 ▾';margin-left:auto;font-size:12px;color:#9aa0ab}
+  body.vocab-open .side-head::after{content:'收起 ▴'}
+  .side-cols{display:none}
+  body.vocab-open .side-cols{display:block;max-height:52dvh;overflow-y:auto}
+  .side-col+.side-col{border-left:none;border-top:1px solid var(--line)}
+  .side-col-head{position:static}
+
+  /* 顶部安全区（刘海屏 / 手势条） */
+  .topbar{padding-top:env(safe-area-inset-top)}
+  .sidebar{padding-bottom:env(safe-area-inset-bottom)}
+}
+/* 触屏：去掉 hover 视觉残留，避免点完一直"亮着" */
+@media(hover:none){
+  .btn:hover{transform:none;background:#fff;border-color:var(--line);color:var(--ink2)}
+  .vi:hover{background:transparent}
+  .unit.clickable:hover .w{filter:none}
+}
+/* 移动端视口高度：用 dvh 取代 vh，避免地址栏遮挡 */
+@supports(height:100dvh){
+  .side-cols{max-height:calc(100dvh - 220px)}
+}
+
+/* ---------- 打印 ---------- */
+@media print{
+  .topbar,.legend,#inputPanel,.modal-mask,.footer-note,.detail-tools{display:none!important}
+  body{background:#fff}
+  .layout{display:block;padding:0;max-width:none}
+  .article{box-shadow:none;border:none;padding:0}
+  .p-sent{break-inside:avoid}
+  .p-sent.open>.p-text,.p-sent.open>.p-num,
+  .p-sent.has-detail>.p-text,.p-sent.has-detail>.p-num{display:none!important}
+  .p-sent.has-detail .p-detail{display:block!important;border:none;background:none;padding:6px 0}
+  .annotated{line-height:2.45!important}
+  .unit{opacity:1!important}
+  .unit .gloss{display:block!important;background:none!important;color:#666!important;box-shadow:none!important;opacity:1!important;visibility:visible!important}
+  .sidebar{position:static;margin-top:30px}
+  .side-cols{max-height:none;overflow:visible}
+  .side-card{box-shadow:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="logo"><span class="logo-mark">句</span>长难句分析<small id="modelTag">DeepSeek</small></div>
+    <div class="topbar-actions">
+      <div class="seg-toggle" id="modeToggle" title="翻译显示模式：始终显示 / 悬停才显示">
+        <button data-mode="always" class="on">始终显示翻译</button>
+        <button data-mode="hover">悬停显示</button>
+      </div>
+      <button class="btn ico" id="transBtn" title="隐藏译文">译</button>
+      <button class="btn ico" id="glossBtn" title="隐藏释义">释</button>
+      <button class="btn ico" id="fontBtn" title="切换标注区字体">Aa</button>
+      <button class="btn ico" id="expandAllBtn" title="全部展开">⤢</button>
+      <button class="btn ico" id="collapseAllBtn" title="全部折叠">⤡</button>
+      <button class="btn ico" id="printBtn" title="打印 / 导出 PDF" disabled>⎙</button>
+      <button class="btn ico" id="cacheBtn" title="清除缓存"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M10 11v7M14 11v7"/></svg></button>
+      <button class="btn ico" id="promptBtn" title="AI 解词提示词设置"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .33 1.76l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.76-.33 1.6 1.6 0 0 0-1 1.47V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.47 1.6 1.6 0 0 0-1.76.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .33-1.76 1.6 1.6 0 0 0-1.47-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.47-1 1.6 1.6 0 0 0-.33-1.76l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.6 1.6 0 0 0 1.76.33H9a1.6 1.6 0 0 0 1-1.47V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.47 1.6 1.6 0 0 0 1.76-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.33 1.76V9a1.6 1.6 0 0 0 1.47 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.47 1z"/></svg></button>
+      <!-- 窄屏：被收起来的次要功能 -->
+      <div class="more-wrap">
+        <button class="btn ico" id="moreBtn" title="更多" aria-haspopup="true" aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+        </button>
+        <div class="more-menu" id="moreMenu" role="menu">
+          <div class="cap">翻译显示</div>
+          <button data-act="mode-always" role="menuitem">始终显示翻译</button>
+          <button data-act="mode-hover" role="menuitem">仅悬停时显示</button>
+          <div class="sep"></div>
+          <button data-act="trans" role="menuitem" id="mmTrans">隐藏译文</button>
+          <button data-act="gloss" role="menuitem" id="mmGloss">隐藏释义</button>
+          <button data-act="font" role="menuitem" id="mmFont">切换字体</button>
+          <div class="sep"></div>
+          <button data-act="expand" role="menuitem">全部展开</button>
+          <button data-act="collapse" role="menuitem">全部折叠</button>
+          <div class="sep"></div>
+          <button data-act="print" role="menuitem">打印 / 导出 PDF</button>
+          <button data-act="cache" role="menuitem">缓存管理</button>
+          <button data-act="prompt" role="menuitem">AI 解词提示词</button>
+        </div>
+      </div>
+      <button class="btn primary" id="keyBtn">设置 API Key</button>
+    </div>
+  </div>
+</header>
+
+<div class="legend" id="legendBar">
+  <div class="legend-inner" id="legendInner"><span class="legend-title">图例：加粗黄底=主干 · 彩色字=修饰 · 色块=从句（点击可筛选）</span></div>
+</div>
+
+<main class="layout">
+  <section class="content">
+    <div class="panel" id="inputPanel">
+      <div class="panel-tabs">
+        <button data-tab="text" class="on">📝 粘贴文本</button>
+        <button data-tab="image">📷 图片识别</button>
+      </div>
+      <div class="panel-body">
+        <div id="tabText">
+          <textarea id="articleInput" class="serif" placeholder="粘贴考研英语文章全文（1000 词以内效果最佳）。段落之间用空行分隔，AI 会先通读全文断句，再逐句分析…"></textarea>
+        </div>
+        <div id="tabImage" style="display:none">
+          <div class="dropzone" id="dropzone">
+            <div class="dz-icon">🖼️</div>
+            点击选择图片，或拖拽 / 粘贴截图到此处
+            <small>支持 JPG / PNG / WebP，多图按顺序识别；上传后由 DeepSeek 转录为文本，可再人工校对</small>
+            <input type="file" id="fileInput" accept="image/*" multiple hidden>
+          </div>
+          <div class="img-list" id="imgList"></div>
+        </div>
+      </div>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-text" id="progressText"></div>
+      </div>
+      <div class="panel-foot">
+        <button class="btn accent" id="analyzeBtn">开始分析</button>
+        <button class="btn" id="ocrBtn" style="display:none">识别图片文字</button>
+        <button class="btn" id="reanalyzeBtn" style="display:none">重新分析</button>
+        <button class="btn" id="sampleBtn">载入示例</button>
+        <span class="status" id="status" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="articleWrap" style="display:none">
+      <div class="article-head">
+        <h2>原文精析</h2>
+        <span class="meta" id="articleMeta"></span>
+      </div>
+      <div class="article" id="article"></div>
+    </div>
+
+    <div class="empty-article" id="emptyArticle">
+      <div class="big">📖</div>
+      <p>粘贴文章或上传图片，点击「开始分析」<br>AI 将通读全文断句，逐句划分句子成分、标注重难点词汇<br>点击句子可展开颜色标注与逐词翻译 · 双击任意单词查看 AI 详解</p>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <div class="side-card">
+      <div class="side-head" id="vocabHead"><h3>核心词汇 / 词组</h3><span id="vocabCount"></span></div>
+      <div class="side-cols">
+        <div class="side-col">
+          <div class="side-col-head">词汇<span id="wordCount"></span></div>
+          <div class="side-col-body" id="wordList"><div class="side-empty">分析完成后<br>按原文顺序列出<br>单击定位 · 双击详解</div></div>
+        </div>
+        <div class="side-col">
+          <div class="side-col-head">词组<span id="phraseCount"></span></div>
+          <div class="side-col-body" id="phraseList"><div class="side-empty">固定搭配与<br>短语动词列在这里</div></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div class="footer-note">本工具在浏览器本地运行，API Key 与分析缓存仅存储于你的浏览器 localStorage</div>
+
+<div class="modal-mask" id="wordModal">
+  <div class="modal word-modal">
+    <button class="tt-close" id="wmClose" aria-label="关闭">✕</button>
+    <h3 id="wmWord"></h3>
+    <div class="wm-sent" id="wmSent"></div>
+    <div id="wmBody"></div>
+    <div class="wm-meta">
+      <button class="mini-btn" id="wmReexplain">重新解释</button>
+      <button class="mini-btn" id="wmEditPrompt">编辑提示词</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="promptModal">
+  <div class="modal prompt-modal">
+    <button class="tt-close" id="pmClose" aria-label="关闭">✕</button>
+    <h3>AI 解词提示词</h3>
+    <p>双击句子里的单词时，下面这段提示词会发给 AI。你可以按自己的需求改写，改完点保存即可，之后所有解词都用你的版本。</p>
+    <div class="prompt-field">
+      <label>插入到光标处：<b>点击下面的占位符</b></label>
+      <div class="ph-row" id="pmPhRow"></div>
+    </div>
+    <div class="prompt-field">
+      <label>额外要求（可为空，会填入 <code>{extra}</code>）</label>
+      <textarea id="pfExtra" rows="2" placeholder="例如：只讲考研真题里出现过的义项；尽量给出词根词缀拆解"></textarea>
+    </div>
+    <div class="prompt-field">
+      <label><b>用户提示词</b>（正文，必填）</label>
+      <textarea id="pfUser" rows="10" spellcheck="false"></textarea>
+    </div>
+    <div class="prompt-note" id="pfWarn"></div>
+    <details class="prompt-adv">
+      <summary>高级：系统提示词（设定 AI 的角色与输出纪律）</summary>
+      <div class="prompt-field">
+        <textarea id="pfSystem" rows="3" spellcheck="false"></textarea>
+      </div>
+    </details>
+    <div class="prompt-field">
+      <label>预览（用示例值填充后的实际内容）</label>
+      <pre id="pfPreview"></pre>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="pmReset">恢复默认</button>
+      <span class="spacer"></span>
+      <button class="btn" id="pmCancel">取消</button>
+      <button class="btn primary" id="pmSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="cacheModal">
+  <div class="modal cache-modal">
+    <button class="tt-close" id="cmClose" aria-label="关闭">✕</button>
+    <h3>缓存管理</h3>
+    <p>分析结果与 AI 解词都缓存在本机浏览器里。<b>超过 7 天没有访问过的缓存会自动清除</b>，最多保留 40 条；重新分析同一篇文章不会消耗 API 额度。</p>
+    <div class="cache-stat" id="cmStat"></div>
+    <div class="cache-actions">
+      <button class="btn" id="cmExpired">清除过期缓存</button>
+      <button class="btn" id="cmClearAll">清空全部缓存</button>
+    </div>
+    <div class="cache-msg" id="cmMsg"></div>
+    <div class="modal-foot">
+      <button class="btn primary" id="cmOk">完成</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="keyModal">
+  <div class="modal">
+    <h3>设置 DeepSeek API Key</h3>
+    <p>Key 仅保存在你自己的浏览器 localStorage 中，不会上传到任何第三方服务器。可在 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek 开放平台</a> 创建。</p>
+    <input type="password" id="keyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
+    <div class="key-tip" id="keyTip"></div>
+    <div class="modal-foot">
+      <button class="btn" id="keyClear">清除 Key 与缓存</button>
+      <span class="spacer"></span>
+      <button class="btn" id="keyCancel">取消</button>
+      <button class="btn primary" id="keySave">保存</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ============================================================
+   常量与配置
+   ============================================================ */
+const API_URL = 'https://api.deepseek.com/chat/completions';
+const MODEL   = 'deepseek-flash';       // 官方模型名（旧名 deepseek-v4-flash 已下线）
+const MODEL_LABEL = 'DeepSeek V4.1 Flash';
+const BATCH_SIZE = 5;                   // 每批句子数
+const CONCURRENCY = 3;                  // 并发批次数
+const MAX_TOKENS = 8192;                // 单次请求最大输出（非思考模式默认上限即 8K）
+const REQ_TIMEOUT = 180000;             // 单次请求超时（毫秒）
+const CACHE_PRE = 'ds_ana_v5_';         // 缓存前缀（版本变更后旧缓存自动失效）
+const WORD_CACHE_PRE = 'ds_word_v3_';   // 解词缓存（v3：缓存键已带上提示词指纹）
+const INDEX_KEY = 'ds_cache_index';     // 统一缓存索引（分析 + 解词）：{k: 键, t: 最后访问时间}
+const MAX_CACHE_ENTRIES = 40;           // 索引最多保留的缓存条目数
+const CACHE_TTL_DAYS = 7;               // 底线：超过这个天数没被访问过的缓存直接清除
+const CACHE_TTL_MS = CACHE_TTL_DAYS * 24 * 60 * 60 * 1000;
+
+/* ---------- 双击 AI 解词：可自定义提示词 ----------
+   占位符在发送前替换：{word}=当前单词  {sentence}=所在句子
+   {trans}=该句译文  {context}=整段原文  {extra}=用户额外要求
+   下面这段 JSON 结构是程序解析结果用的，属于"不可删除"部分。 */
+const WORD_JSON_SCHEMA = `输出 JSON（只输出 JSON 本身，不要加任何解释或 markdown 代码块）：
+{
+  "meaning": "该词在原句语境中的含义（中文，简洁准确）",
+  "usage": "用法与常见搭配（中文，2~4 句，可包含词性、固定搭配、近义词辨析等考点）",
+  "examples": [{"en": "英文例句", "zh": "中文翻译"}, {"en": "...", "zh": "..."}]
+}`;
+const WORD_PLACEHOLDERS = ['word', 'sentence', 'trans', 'context', 'extra', 'schema'];
+const WORD_PROMPT_DEFAULT = {
+  system: '你是考研英语词汇专家，擅长结合语境讲透单词。你只输出符合要求的 JSON，不输出任何其他内容。',
+  user: `请结合下面这个句子，讲解单词/词组 "{word}"。
+
+原句：{sentence}
+该句译文：{trans}
+所在段落：{context}
+
+{extra}
+
+{schema}`,
+  extra: ''
+};
+
+/* 视觉分层：主干成分（主谓宾表）= 加粗彩色文字 + 统一淡黄色高亮（句子骨架）；
+   修饰成分（定状补）= 彩色文字；从句/同位语/插入语 = 明显底色块 */
+const TYPES = {
+  subject:    {label:'主语',     color:'#1d4ed8', bold:true, bg:'#f7e6a4'},
+  predicate:  {label:'谓语',     color:'#dc2626', bold:true, bg:'#f7e6a4'},
+  object:     {label:'宾语',     color:'#15803d', bold:true, bg:'#f7e6a4'},
+  predicative:{label:'表语',     color:'#ea580c', bold:true, bg:'#f7e6a4'},
+  attributive:{label:'定语',     color:'#7c3aed'},
+  adverbial:  {label:'状语',     color:'#b45309'},
+  complement: {label:'补足语',   color:'#0e7490'},
+  attr_clause:{label:'定语从句', color:'#a21caf', bg:'#f9e8ff'},
+  appositive: {label:'同位语',   color:'#4338ca', bg:'#e6e9fb'},
+  parenthesis:{label:'插入语',   color:'#6b7280', bg:'#f1f2f4', italic:true},
+  other:      {label:'其他',     color:'#9aa0ab'}
+};
+
+const SAMPLE = `The idea that some groups of people may be more intelligent than others is one of those hypotheses that dare not speak its name. But Gregory Cochran is prepared to say it anyway. He is that rare bird, a scientist who works independently of any institution.
+
+He helped popularize the idea that some diseases not previously thought to have a bacterial cause were actually infections, which aroused much controversy when it was first suggested. Even he, however, might tremble at the thought of what he is about to do. Together with another two scientists, he is publishing a paper which not only suggests that one group of humanity is more intelligent than the others, but explains the process that has brought this about.`;
+
+/* ============================================================
+   状态
+   ============================================================ */
+const state = {
+  apiKey: localStorage.getItem('ds_api_key') || '',
+  images: [],            // {dataUrl}
+  sentences: [],         // [{text, data|null, status, para, error}]
+  paragraphs: [],        // [[句索引...], ...]
+  vocab: [],             // [{w,t,pos,key}]
+  analyzing: false,
+  hasResult: false,
+  splitFallback: ''      // AI 断句失败时的兜底说明（如「本地规则断句」）
+};
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+/* HTML 转义：同时兼容文本节点与双引号属性 */
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+/* 属性值专用转义：HTML 属性里不能用反斜杠转义引号（浏览器不认），必须用实体 */
+const escA = s => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/'/g, '&#39;');
+
+function hexTint(hex, a){
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+function cyrb53(str, seed = 0){
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for(let i = 0; i < str.length; i++){
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1>>>0)).toString(36);
+}
+function setStatus(msg, cls = ''){
+  const el = $('#status');
+  el.textContent = msg;
+  el.className = 'status ' + cls;
+}
+let progressTimer = null;
+function setProgress(done, total, label){
+  $('#progressWrap').classList.add('show');
+  const bar = $('#progressBar');
+  const pct = total ? Math.min(100, done / total * 100) : 0;
+  bar.style.width = pct.toFixed(1) + '%';
+  bar.classList.toggle('busy', done < total);
+  $('#progressText').textContent = label || `已完成 ${done} / ${total} 句`;
+}
+function hideProgress(){
+  clearTimeout(progressTimer);
+  $('#progressWrap').classList.remove('show');
+  $('#progressBar').classList.remove('busy');
+}
+function later(fn, ms){ clearTimeout(progressTimer); progressTimer = setTimeout(fn, ms); }
+
+let toastTimer = null;
+function toast(msg){
+  setStatus(msg, 'ok');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { if($('#status').textContent === msg) setStatus(''); }, 2600);
+}
+async function copyText(text){
+  try{
+    if(navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text);
+    else{
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    toast('已复制到剪贴板');
+  }catch(_){ setStatus('复制失败，请手动选择文本', 'err'); }
+}
+
+/* ============================================================
+   图例（点击筛选高亮）
+   ============================================================ */
+let filterType = null;
+function legendChipsHTML(clickable = true){
+  return Object.entries(TYPES).filter(([k]) => k !== 'other').map(([k,t]) =>
+    `<span class="chip"${clickable ? ` data-type="${k}"` : ''} style="background:${hexTint(t.color,.1)};border-color:${hexTint(t.color,.25)};color:${t.color}"><span class="dot" style="background:${t.color}"></span>${t.label}</span>`
+  ).join('');
+}
+function renderLegend(){
+  const bar = $('#legendInner');
+  bar.innerHTML = '<span class="legend-title">图例：加粗黄底=主干 · 彩色字=修饰 · 色块=从句（点击可筛选）</span>' + legendChipsHTML();
+  bar.querySelectorAll('.chip').forEach(c => {
+    c.onclick = () => {
+      filterType = (filterType === c.dataset.type) ? null : c.dataset.type;
+      applyFilter();
+    };
+  });
+}
+function applyFilter(){
+  const q = filterType ? `.unit[data-type="${escA(filterType)}"]` : '';
+  $$('#article .unit').forEach(u => {
+    u.classList.toggle('dim', !!filterType && u.dataset.type !== filterType);
+  });
+  $$('#legendInner .chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.type === filterType);
+  });
+  if(q){ /* 选中筛选时给命中的成分一个轻微提示（仅视觉） */ }
+}
+
+/* ============================================================
+   API Key
+   ============================================================ */
+let keyTipTimer = null;
+function openKeyModal(){
+  $('#keyInput').value = state.apiKey;
+  updateKeyTip();
+  $('#keyModal').classList.add('show');
+  later(() => $('#keyInput').focus(), 60);
+}
+function updateKeyTip(){
+  $('#keyTip').textContent = state.apiKey ? '当前已保存一个 Key（' + state.apiKey.slice(0,6) + '…' + state.apiKey.slice(-4) + '）' : '';
+}
+$('#keyBtn').onclick = openKeyModal;
+
+/* ============================================================
+   缓存管理（角落按钮 + 过期底线）
+   ============================================================ */
+function refreshCacheBtn(){
+  const s = cacheStats();
+  const btn = $('#cacheBtn');
+  if(!btn) return;
+  /* 纯图标按钮：占用信息放进 title（悬停可见），不占顶栏宽度 */
+  btn.title = s.count
+    ? `清除缓存：当前 ${s.count} 条 · 约 ${fmtSize(s.bytes)}；超过 ${CACHE_TTL_DAYS} 天未访问会自动清除`
+    : '清除缓存：当前没有缓存';
+}
+function openCacheModal(){
+  refreshCacheBtn();
+  const s = cacheStats();
+  const idx = getRawIndex();
+  const now = Date.now();
+  const expiringSoon = idx.filter(e => e.t && (now - e.t) > CACHE_TTL_MS * 0.75).length;
+  $('#cmStat').innerHTML = s.count
+    ? `当前缓存：<b>${s.count}</b> 条 · 约 <b>${fmtSize(s.bytes)}</b><br>` +
+      `过期底线：<b>${CACHE_TTL_DAYS} 天</b>未访问即清除 · 最多保留 <b>${MAX_CACHE_ENTRIES}</b> 条<br>` +
+      (expiringSoon ? `<span style="color:#c23030">其中 ${expiringSoon} 条接近过期</span>` : '暂无接近过期的条目')
+    : '当前没有缓存。<br>分析完成的文章和查过的单词会自动存到本机，下次免 API 费用。';
+  $('#cmMsg').textContent = '';
+  $('#cmMsg').className = 'cache-msg';
+  $('#cacheModal').classList.add('show');
+}
+$('#cacheBtn').onclick = openCacheModal;
+$('#cmClose').onclick = () => $('#cacheModal').classList.remove('show');
+$('#cmOk').onclick = () => $('#cacheModal').classList.remove('show');
+$('#cacheModal').addEventListener('click', e => { if(e.target.id === 'cacheModal') $('#cacheModal').classList.remove('show'); });
+$('#cmExpired').onclick = () => {
+  const r = cleanExpiredNow();
+  refreshCacheBtn();
+  const msg = $('#cmMsg');
+  msg.className = 'cache-msg';
+  msg.textContent = r.removed
+    ? `已清除 ${r.removed} 条过期缓存，释放约 ${fmtSize(r.freed)}，剩余 ${r.left} 条`
+    : `没有超过 ${CACHE_TTL_DAYS} 天未访问的缓存，无需清理`;
+  openCacheModalStatOnly();
+};
+$('#cmClearAll').onclick = () => {
+  const s = cacheStats();
+  if(!s.count){ const m = $('#cmMsg'); m.className = 'cache-msg'; m.textContent = '当前没有缓存可清空'; return; }
+  if(!confirm(`将清空全部 ${s.count} 条缓存（约 ${fmtSize(s.bytes)}），并清除 API Key，确定吗？`)) return;
+  clearAllCache();
+  state.apiKey = '';
+  try{ localStorage.removeItem('ds_api_key'); }catch(_){}
+  $('#keyBtn').textContent = '设置 API Key';
+  const m = $('#cmMsg');
+  m.className = 'cache-msg';
+  m.textContent = '已清空全部缓存与 API Key';
+  refreshCacheBtn();
+  openCacheModalStatOnly();
+};
+/* 只刷新弹窗里的统计文字，不重置上面的提示 */
+function openCacheModalStatOnly(){
+  const s = cacheStats();
+  $('#cmStat').innerHTML = s.count
+    ? `当前缓存：<b>${s.count}</b> 条 · 约 <b>${fmtSize(s.bytes)}</b><br>` +
+      `过期底线：<b>${CACHE_TTL_DAYS} 天</b>未访问即清除 · 最多保留 <b>${MAX_CACHE_ENTRIES}</b> 条`
+    : '当前没有缓存。';
+}
+
+$('#keyCancel').onclick = () => $('#keyModal').classList.remove('show');
+$('#keyModal').addEventListener('click', e => { if(e.target.id === 'keyModal') $('#keyModal').classList.remove('show'); });
+$('#keySave').onclick = () => {
+  const v = $('#keyInput').value.trim();
+  if(!v){ alert('请输入 API Key'); return; }
+  if(!/^sk-[A-Za-z0-9_\-]{10,}$/.test(v)){
+    if(!confirm('这段内容不像标准的 sk- 开头 Key，仍要保存吗？')) return;
+  }
+  state.apiKey = v;
+  try{ localStorage.setItem('ds_api_key', v); }catch(_){}
+  $('#keyModal').classList.remove('show');
+  $('#keyBtn').textContent = 'API Key ✓';
+  setStatus('API Key 已保存到本地', 'ok');
+};
+$('#keyClear').onclick = () => {
+  if(!confirm('将清除 API Key、分析缓存与解词缓存，确定吗？')) return;
+  state.apiKey = '';
+  try{
+    localStorage.removeItem('ds_api_key');
+    clearAllCache();
+  }catch(_){}
+  $('#keyInput').value = '';
+  $('#keyBtn').textContent = '设置 API Key';
+  updateKeyTip();
+  setStatus('已清除本地 Key 与缓存');
+};
+function requireKey(){
+  if(state.apiKey) return true;
+  openKeyModal();
+  setStatus('请先设置 API Key', 'err');
+  return false;
+}
+
+/* ============================================================
+   输入选项卡
+   ============================================================ */
+function selectTab(tab){
+  $$('.panel-tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === tab));
+  $('#tabText').style.display = tab === 'text' ? 'block' : 'none';
+  $('#tabImage').style.display = tab === 'image' ? 'block' : 'none';
+  $('#ocrBtn').style.display = tab === 'image' ? 'inline-flex' : 'none';
+  // 图片选项卡下隐藏「开始分析」，避免误用空文本框发起分析
+  $('#analyzeBtn').style.display = tab === 'text' ? 'inline-flex' : 'none';
+  $('#reanalyzeBtn').style.display = (tab === 'text' && state.hasResult) ? 'inline-flex' : 'none';
+}
+$$('.panel-tabs button').forEach(b => { b.onclick = () => selectTab(b.dataset.tab); });
+
+/* ============================================================
+   图片上传与 OCR
+   ============================================================ */
+const dz = $('#dropzone'), fileInput = $('#fileInput');
+const isImageFile = f => !!f && ((f.type && f.type.startsWith('image/')) || /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.name || ''));
+dz.onclick = () => fileInput.click();
+fileInput.onchange = e => { addImages(Array.from(e.target.files || [])); fileInput.value = ''; };
+dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag'); };
+dz.ondragleave = () => dz.classList.remove('drag');
+dz.ondrop = e => {
+  e.preventDefault(); dz.classList.remove('drag');
+  addImages(Array.from(e.dataTransfer.files || []).filter(isImageFile));
+};
+document.addEventListener('paste', e => {
+  if($('#tabImage').style.display === 'none') return;
+  const items = Array.from(e.clipboardData?.items || []).filter(i => i.type.startsWith('image/'));
+  if(!items.length) return;
+  e.preventDefault();
+  addImages(items.map(i => i.getAsFile()).filter(Boolean));
+});
+
+let imgBusy = 0;
+function addImages(files){
+  const list = (files || []).filter(isImageFile);
+  if(!list.length){ setStatus('没有识别到可用的图片文件', 'err'); return; }
+  list.forEach(f => {
+    imgBusy++;
+    const rd = new FileReader();
+    rd.onload = () => {
+      compressImage(rd.result, dataUrl => {
+        state.images.push({dataUrl});
+        renderImgList();
+        if(--imgBusy <= 0) setStatus(`已添加 ${state.images.length} 张图片，点击「识别图片文字」开始转录`, 'ok');
+      });
+    };
+    rd.onerror = () => { imgBusy--; setStatus('图片读取失败，请重试', 'err'); };
+    rd.readAsDataURL(f);
+  });
+  setStatus('正在处理图片…', 'busy');
+}
+function compressImage(dataUrl, cb){
+  const img = new Image();
+  let done = false;
+  const finish = v => { if(!done){ done = true; cb(v); } };
+  const timer = setTimeout(() => finish(dataUrl), 8000);   // 解码异常兜底，避免流程卡死
+  img.onload = () => {
+    clearTimeout(timer);
+    try{
+      const MAX = 1600;
+      let {width:w, height:h} = img;
+      if(!w || !h) return finish(dataUrl);
+      if(Math.max(w,h) > MAX){ const r = MAX / Math.max(w,h); w = Math.round(w*r); h = Math.round(h*r); }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      finish(c.toDataURL('image/jpeg', .85));
+    }catch(_){ finish(dataUrl); }
+  };
+  img.onerror = () => { clearTimeout(timer); finish(dataUrl); };
+  img.src = dataUrl;
+}
+function renderImgList(){
+  $('#imgList').innerHTML = state.images.map((im,i) =>
+    `<div class="img-item"><img src="${esc(im.dataUrl)}" alt="待识别图片 ${i+1}"><button class="rm" data-i="${i}" title="移除" aria-label="移除图片">✕</button></div>`
+  ).join('');
+  $('#imgList').querySelectorAll('.rm').forEach(b => {
+    b.onclick = () => { state.images.splice(+b.dataset.i, 1); renderImgList(); };
+  });
+}
+
+$('#ocrBtn').onclick = async () => {
+  if(!requireKey()) return;
+  if(!state.images.length){ setStatus('请先添加图片', 'err'); return; }
+  const btn = $('#ocrBtn');
+  const oldLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = '识别中…';
+  setStatus('正在识别图片文字…', 'busy');
+  setProgress(0, 1, `正在转录 ${state.images.length} 张图片，请稍候…`);
+  try{
+    const content = [{type:'text', text:'请逐字转录图片中的英文文章正文。要求：1) 只输出英文原文文本，保留原有拼写、大小写和标点；2) 段落之间用一个空行分隔；3) 不要输出任何解释、注释、翻译或 markdown 标记；4) 若有多张图片，按图片顺序依次转录并拼接。'}];
+    state.images.forEach(im => content.push({type:'image_url', image_url:{url:im.dataUrl}}));
+    const text = (await callAPI([{role:'user', content}], {json:false})).trim();
+    if(!text) throw new Error('识别结果为空');
+    $('#articleInput').value = text;
+    selectTab('text');
+    const words = text.split(/\s+/).filter(Boolean).length;
+    setStatus(`识别完成，已填入文本框（约 ${words} 词），请校对后开始分析`, 'ok');
+  }catch(err){
+    setStatus('识别失败：' + err.message, 'err');
+  }finally{
+    btn.disabled = false; btn.textContent = oldLabel;
+    hideProgress();
+  }
+};
+</script>
+
+<script>
+/* ============================================================
+   API 调用
+   ============================================================ */
+async function callAPI(messages, {json = true, maxTokens = MAX_TOKENS} = {}){
+  const body = {
+    model: MODEL,
+    messages,
+    stream: false,
+    thinking: {type: 'disabled'},   // 语法标注任务不需要思考链，省时省钱且输出更稳定
+    max_tokens: maxTokens
+  };
+  if(json) body.response_format = {type: 'json_object'};   // 注意：JSON 模式要求 prompt 中出现 "JSON" 字样
+
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), REQ_TIMEOUT);
+  let res;
+  try{
+    res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + state.apiKey},
+      body: JSON.stringify(body),
+      signal: ctl.signal
+    });
+  }catch(e){
+    clearTimeout(timer);
+    if(e && e.name === 'AbortError') throw new Error(`请求超时（超过 ${REQ_TIMEOUT/1000} 秒未响应），请重试`);
+    throw new Error('网络请求失败（可能是网络问题或浏览器跨域限制）：' + (e && e.message ? e.message : e));
+  }
+  clearTimeout(timer);
+
+  if(!res.ok){
+    let msg = 'HTTP ' + res.status;
+    try{ const j = await res.json(); msg = j.error?.message || msg; }catch(_){}
+    if(res.status === 401 || res.status === 403) msg = 'API Key 无效或已过期，请重新设置';
+    else if(res.status === 402) msg = '账户余额不足，请前往 DeepSeek 平台充值';
+    else if(res.status === 429) msg = '请求过于频繁，请稍后重试';
+    else if(res.status >= 500) msg = '服务端错误（' + res.status + '），请稍后重试';
+    throw new Error(msg);
+  }
+
+  const j = await res.json();
+  const choice = j.choices?.[0];
+  if(choice && choice.finish_reason === 'length') throw new Error('输出被 max_tokens 截断，本批句子过多，请重试');
+  const content = choice?.message?.content ?? '';
+  if(!content) throw new Error('模型返回了空内容，请重试');
+  return content;
+}
+
+/* 容错 JSON 解析：兼容 ```json 包裹、前后夹带说明文字、结尾逗号等情况 */
+function parseJSON(text){
+  if(!text) throw new Error('返回内容为空');
+  let t = String(text).trim();
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if(fence) t = fence[1].trim();
+  try{ return JSON.parse(t); }catch(_){}
+  const s = t.indexOf('{'), e = t.lastIndexOf('}');
+  if(s >= 0 && e > s){
+    let body = t.slice(s, e + 1).replace(/,\s*([}\]])/g, '$1');   // 去掉多余的尾逗号
+    try{ return JSON.parse(body); }catch(_){}
+  }
+  throw new Error('返回内容不是合法 JSON');
+}
+
+/* ============================================================
+   AI 断句（段落严格按用户粘贴的排版）
+   ============================================================ */
+/* 按用户粘贴的排版切分段落：优先按空行；全文没有空行则按单个换行 */
+function localParagraphs(text){
+  const norm = String(text || '').replace(/\r/g, '');
+  let paras = norm.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
+  if(paras.length <= 1) paras = norm.split(/\n+/).map(p => p.trim()).filter(Boolean);
+  return paras;
+}
+
+function buildSplitMessages(paras){
+  const sys = '你是英文文章断句专家，只输出符合要求的 JSON，不输出任何其他内容。';
+  const marked = paras.map((p,i) => `【第${i+1}段】\n${p}`).join('\n\n');
+  const user = `下面是一篇英文文章，共 ${paras.length} 段（已用【第N段】标出）。请在每个段落内部把文章切分为句子。
+
+要求：
+1. 只输出 JSON：{"paragraphs": [["句子1","句子2"], ["句子3"], ...]}，数组长度必须恰好等于 ${paras.length}，第 i 个元素是第 i 段内的句子（按原文顺序）。
+2. 不要合并、拆分或重排段落；每个句子必须与原文逐字一致（含标点、大小写），不得改写、补全或删减任何字符；句首句尾不要带多余空格；所有句子拼接后应能完整还原原文。
+3. 正确识别缩写（Mr. / Dr. / U.S. / e.g. / i.e. / etc. / Fig. 等）、小数（如 3.5）、省略号、直接引语，不要在这些位置错误断句；不要从分号、冒号处把句子切开。
+
+原文：
+${marked}`;
+  return [{role:'system', content:sys}, {role:'user', content:user}];
+}
+
+/* 把 AI 返回的段落结构规整化，并做“去掉空白后必须与原文逐字一致”的校验 */
+function normalizeSplit(obj, text, srcParas){
+  if(!obj || !Array.isArray(obj.paragraphs)) return null;
+  const paras = obj.paragraphs
+    .map(p => (Array.isArray(p) ? p : [])
+      .map(s => String(s == null ? '' : s).trim())
+      .filter(s => /\S/.test(s)))
+    .filter(p => p.length);
+  if(paras.length !== srcParas.length) return null;
+  const strip = x => x.replace(/\s/g, '');
+  return strip(paras.flat().join('')) === strip(text) ? paras : null;
+}
+
+async function aiSplit(text){
+  const srcParas = localParagraphs(text);
+  const raw = await callAPI(buildSplitMessages(srcParas));
+  const obj = parseJSON(raw);
+  const paras = normalizeSplit(obj, text, srcParas);
+  if(!paras) throw new Error('AI 断句结果与原文不一致');
+  return paras;
+}
+
+/* 本地增强断句（AI 断句不可用时的兜底）：保护缩写与小数点，逐字符扫描不丢字符 */
+const ABBR_WORD = /^(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|Mt|vs|etc|viz|cf|No|Nos|Fig|Figs|Inc|Ltd|Co|Corp|Gen|Gov|Sen|Rep|Adm|Capt|Sgt|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)$/;
+const LIKE_ABBR = /^(?:[A-Za-z]\.)+[A-Za-z]?$/;          // U.S. / e.g. / a.m. / Ph.D.
+
+function localSplit(text){
+  const paras = localParagraphs(text).map(p => p.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  return paras.map(p => {
+    const out = [];
+    let buf = '', i = 0;
+    /* 句末标点：.!? 后允许跟引号/括号收尾 */
+    const tailRe = /^(?:\.[.!?]*|[!?]+)["'”’)\]]*/;
+    while(i < p.length){
+      const ch = p[i];
+      if(ch === '.' || ch === '!' || ch === '?'){
+        const prev = p[i-1] || '';
+        const next = p[i+1] || '';
+        // 小数点 3.5
+        if(ch === '.' && /\d/.test(prev) && /\d/.test(next)){ buf += ch; i++; continue; }
+        if(ch === '.'){
+          const head = buf.trimEnd();
+          const lastWord = head.slice(head.lastIndexOf(' ') + 1);
+          const twoBack = head.slice(0, head.length - lastWord.length - 1).trimEnd();
+          const lastTwo = twoBack.slice(twoBack.lastIndexOf(' ') + 1);
+          // 单字母缩写 U.S. / 首字母缩写 a.m. / 常见缩写 Mr. Fig. Jr. —— 都不是句末
+          if(/^[A-Za-z]$/.test(lastWord)){ buf += ch; i++; continue; }
+          if(ABBR_WORD.test(lastWord)){ buf += ch; i++; continue; }
+          if(/^[A-Za-z]$/.test(lastTwo) && lastWord.length <= 2){ buf += ch; i++; continue; }
+          if(next && /[A-Za-z0-9]/.test(next)){ buf += ch; i++; continue; }   // 词内点，如 www.x.com
+          // 后面还有小写字母开头的词，说明不是真正的句末（作者笔误或省略）
+          const after = p.slice(i + 1);
+          const mRest = /^\s+([a-z])/.exec(after);
+          if(mRest){ buf += ch; i++; continue; }
+        }
+        const m = tailRe.exec(p.slice(i));
+        if(m){
+          buf += m[0];
+          i += m[0].length;
+          out.push(buf.trim());
+          buf = '';
+          continue;
+        }
+      }
+      buf += ch;
+      i++;
+    }
+    if(buf.trim()) out.push(buf.trim());
+    return out.filter(s => /\S/.test(s));
+  }).filter(p => p.length);
+}
+
+async function splitArticle(text){
+  try{
+    setProgress(0, 1, 'AI 正在通读全文、切分句子…');
+    const paras = await aiSplit(text);
+    state.splitFallback = '';
+    return paras;
+  }catch(err){
+    const paras = localSplit(text);
+    if(!paras.length) throw new Error('断句失败：' + err.message);
+    // 兜底信息一直保留到分析结束，避免被后续进度提示冲掉
+    state.splitFallback = '本地规则断句';
+    toast('AI 断句不可用，已改用本地规则断句');
+    console.warn('[长难句工具] AI 断句失败，已本地兜底：', err.message);
+    return paras;
+  }
+}
+
+/* ============================================================
+   分析 Prompt
+   ============================================================ */
+function buildAnalysisMessages(batch){
+  const sys = '你是一位资深的考研英语语法与词汇分析专家，擅长长难句成分划分。你只输出符合要求的 JSON，不输出任何其他内容。';
+  const numbered = batch.map((s,i) => `[${i+1}] ${s.text}`).join('\n');
+  const user = `请分析以下考研英语文章中的 ${batch.length} 个句子。
+
+对每句话输出一个对象，包含四个字段：
+
+1. "segments"：把整句切分为连续的语法成分段。所有段的 text 按顺序拼接后必须与原句逐字符完全一致（包括空格和标点）。type 只能取以下值：
+   subject(主语) / predicate(谓语) / object(宾语) / predicative(表语) / attributive(定语) / adverbial(状语) / complement(补足语) / attr_clause(定语从句) / appositive(同位语或同位语从句) / parenthesis(插入语) / other(连词、标点等无法归类的部分)。
+   每段附 "note"：用中文简要说明该成分的判断依据（15~40字），other 类型的 note 用空字符串。
+
+2. "gloss"：只收录重难点词汇和词组（考研 / 六级及以上难度），基础简单词（如 a, the, is, and, we, have, good, very 等）一律不收录。每项格式：
+   {"w": "原文中的词或词组（必须与原文逐字符一致，保留原大小写）", "t": "简洁中文释义", "pos": "词性缩写（n. v. adj. adv. phr. 等）"}
+   固定搭配、短语动词、习语优先整体收录（如 "be subjected to"、"dare not speak its name"）。
+
+3. "vocab"：从 gloss 中挑出本句最核心的 2~6 个，格式与 gloss 相同。
+
+4. "trans"：整句的通顺中文翻译。要求准确传达原意、符合中文表达习惯，人名地名保留英文原拼写，不要逐字硬译。
+
+输出 JSON 格式（只输出 JSON 本身）：
+{"sentences": [{"segments": [...], "gloss": [...], "vocab": [...], "trans": "..."}, ...]}
+"sentences" 数组长度必须恰好等于 ${batch.length}，顺序与输入句子一一对应。
+
+句子列表：
+${numbered}`;
+  return [{role:'system', content:sys}, {role:'user', content:user}];
+}
+
+/* ============================================================
+   缓存（统一索引 + 访问时间 + 配额/过期管理）
+   索引形如 [{k:'ds_ana_v5_xxx', t:1712345678901}]，t 是最后一次访问时间。
+   两条底线：1) 条目数超过 MAX_CACHE_ENTRIES 丢最旧的；
+            2) 超过 CACHE_TTL_DAYS 天没被访问的一律清除。
+   ============================================================ */
+function cacheKeyFor(text){ return CACHE_PRE + cyrb53(MODEL + '\n' + text); }
+
+function getRawIndex(){
+  try{
+    const arr = JSON.parse(localStorage.getItem(INDEX_KEY) || '[]');
+    if(!Array.isArray(arr)) return [];
+    // 兼容旧格式（纯字符串数组）
+    return arr.map(x => typeof x === 'string'
+      ? {k:x, t:0}
+      : (x && typeof x.k === 'string' ? {k:x.k, t:Number(x.t) || 0} : null)
+    ).filter(Boolean);
+  }catch(_){ return []; }
+}
+function setCacheIndex(list){
+  // 按访问时间排序存放，最旧的在前，便于淘汰
+  const sorted = list.slice().sort((a,b) => a.t - b.t);
+  try{ localStorage.setItem(INDEX_KEY, JSON.stringify(sorted)); }catch(_){}
+}
+function removeKeys(keys){
+  keys.forEach(k => { try{ localStorage.removeItem(k); }catch(_){} });
+}
+/* 清除超过 TTL 没有访问过的缓存；同时丢掉索引里已经不存在的数据 */
+function cleanupExpiredCache(){
+  const now = Date.now();
+  const idx = getRawIndex();
+  const keep = [], drop = [];
+  let changed = false;
+  idx.forEach(e => {
+    let raw = null;
+    try{ raw = localStorage.getItem(e.k); }catch(_){}
+    if(raw == null){ drop.push(e.k); changed = true; return; }   // 数据没了，索引也清掉
+    // t 为 0 说明是旧格式迁移来的，补记为现在，给它一次机会而不是立刻删
+    if(!e.t){ e.t = now; changed = true; keep.push(e); return; }
+    if(now - e.t > CACHE_TTL_MS){ drop.push(e.k); changed = true; } else keep.push(e);
+  });
+  if(drop.length) removeKeys(drop);
+  if(changed || drop.length) setCacheIndex(keep);   // 迁移过格式或有删除时才写回
+  return {removed: drop.length, kept: keep.length};
+}
+function touchCacheIndex(key){
+  const now = Date.now();
+  const idx = getRawIndex().filter(e => e.k !== key);
+  idx.push({k:key, t:now});
+  // 超量：丢最旧的（同时删数据）
+  idx.sort((a,b) => a.t - b.t);
+  while(idx.length > MAX_CACHE_ENTRIES){
+    const dead = idx.shift();
+    try{ localStorage.removeItem(dead.k); }catch(_){}
+  }
+  setCacheIndex(idx);
+}
+function saveCache(key, value){
+  try{
+    localStorage.setItem(key, value);
+    touchCacheIndex(key);
+    cleanupExpiredCache();          // 顺手执行过期底线，避免陈旧缓存长期占位
+    return true;
+  }catch(_){
+    // 配额不足：先清过期，再丢掉最旧的一半，然后重试一次
+    cleanupExpiredCache();
+    const idx = getRawIndex();
+    const removeCount = Math.max(1, Math.floor(idx.length / 2));
+    removeKeys(idx.slice(0, removeCount).map(e => e.k));
+    setCacheIndex(idx.slice(removeCount));
+    try{
+      localStorage.setItem(key, value);
+      touchCacheIndex(key);
+      return true;
+    }catch(_){
+      return false;   // 仍然失败就静默放弃缓存，不影响分析结果
+    }
+  }
+}
+/* 统计当前缓存占用（字节）与条目数 */
+function cacheStats(){
+  let bytes = 0, count = 0;
+  const keys = allCacheKeys();
+  keys.forEach(k => {
+    if(k === INDEX_KEY) return;
+    try{ bytes += (localStorage.getItem(k) || '').length; count++; }catch(_){}
+  });
+  return {count, bytes};
+}
+function allCacheKeys(){
+  const keys = [];
+  for(let i = 0; i < localStorage.length; i++){
+    const k = localStorage.key(i);
+    if(k && (k.startsWith(CACHE_PRE) || k.startsWith(WORD_CACHE_PRE))) keys.push(k);
+  }
+  return keys;
+}
+function fmtSize(n){
+  if(n < 1024) return n + ' B';
+  if(n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(2) + ' MB';
+}
+/* 只清过期（保留仍在有效期内的） */
+function cleanExpiredNow(){
+  const before = cacheStats();
+  const r = cleanupExpiredCache();
+  const after = cacheStats();
+  if(!r.removed) return {removed:0, freed:0, left:after.count};
+  return {removed:r.removed, freed:Math.max(0, before.bytes - after.bytes), left:after.count};
+}
+function clearAllCache(){
+  removeKeys(allCacheKeys());
+  try{ localStorage.removeItem(INDEX_KEY); }catch(_){}
+}
+
+/* ============================================================
+   主流程
+   ============================================================ */
+$('#sampleBtn').onclick = () => {
+  selectTab('text');
+  $('#articleInput').value = SAMPLE;
+  setStatus('已载入示例文章，点击「开始分析」');
+};
+$('#analyzeBtn').onclick = () => analyze(false);
+$('#reanalyzeBtn').onclick = () => analyze(true);
+$('#articleInput').addEventListener('keydown', e => {
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); analyze(false); }
+});
+
+function resetButtons(){
+  state.analyzing = false;
+  $('#analyzeBtn').disabled = false;
+  $('#analyzeBtn').textContent = '开始分析';
+  const inTextTab = $('#tabText').style.display !== 'none';
+  $('#reanalyzeBtn').style.display = (state.hasResult && inTextTab) ? 'inline-flex' : 'none';
+}
+
+async function analyze(force){
+  if(state.analyzing) return;
+  if(!requireKey()) return;
+  const text = $('#articleInput').value.trim();
+  if(!text){ setStatus('请先粘贴文章或识别图片文字', 'err'); return; }
+  if(text.split(/\s+/).filter(Boolean).length > 1500){
+    if(!confirm('文章超过 1500 词，分析可能较慢且消耗较多 token，继续吗？')) return;
+  }
+
+  const cacheKey = cacheKeyFor(text);
+  if(!force){
+    let cached = null;
+    try{ cached = localStorage.getItem(cacheKey); }catch(_){}
+    if(cached){
+      try{
+        const obj = JSON.parse(cached);
+        if(obj && Array.isArray(obj.sentences) && obj.sentences.length){
+          loadResult(obj.sentences);
+          touchCacheIndex(cacheKey);      // 命中即算"访问过"，过期计时从这一刻重新开始
+          refreshCacheBtn();
+          setStatus('已命中本地缓存，未消耗 API 额度（可点「重新分析」强制刷新）', 'ok');
+          return;
+        }
+      }catch(_){}
+      try{ localStorage.removeItem(cacheKey); }catch(_){}
+    }
+  }
+
+  state.analyzing = true;
+  $('#analyzeBtn').disabled = true;
+  $('#analyzeBtn').textContent = '分析中…';
+  $('#reanalyzeBtn').style.display = 'none';
+
+  try{
+    // 第一步：AI 断句（失败自动兜底本地规则）
+    let paras;
+    try{
+      paras = await splitArticle(text);
+    }catch(err){
+      setStatus(err.message, 'err');
+      hideProgress();
+      return;
+    }
+    if(!paras.length){
+      setStatus('未能识别出有效句子', 'err');
+      hideProgress();
+      return;
+    }
+
+    state.sentences = [];
+    paras.forEach((p, pi) => p.forEach(t => {
+      state.sentences.push({text:t, data:null, status:'pending', para:pi, error:''});
+    }));
+    rebuildParagraphs();
+    renderArticleSkeleton();
+    setProgress(0, state.sentences.length, `断句完成，共 ${state.sentences.length} 句，开始逐句分析…`);
+
+    // 第二步：分批并发分析
+    const total = state.sentences.length;
+    const batches = [];
+    for(let i = 0; i < total; i += BATCH_SIZE) batches.push(state.sentences.slice(i, i + BATCH_SIZE));
+
+    const refreshProgress = () => {
+      const ok = state.sentences.filter(s => s.status === 'ok').length;
+      const bad = state.sentences.filter(s => s.status === 'error').length;
+      setProgress(ok + bad, total, bad ? `已完成 ${ok + bad} / ${total} 句（${bad} 句失败，可单独重试）` : undefined);
+    };
+
+    const runBatch = async (batch) => {
+      let lastErr = null;
+      for(let attempt = 0; attempt < 2; attempt++){
+        try{
+          const raw = await callAPI(buildAnalysisMessages(batch));
+          const obj = parseJSON(raw);
+          const arr = Array.isArray(obj.sentences) ? obj.sentences : [];
+          batch.forEach((s,i) => {
+            const item = arr[i];
+            if(item && Array.isArray(item.segments) && item.segments.length){
+              s.data = item; s.status = 'ok'; s.error = '';
+            }else{
+              s.status = 'error'; s.error = '返回数据不完整';
+            }
+          });
+          break;
+        }catch(err){
+          lastErr = err;
+          if(attempt === 0) await new Promise(r => setTimeout(r, 1200 + Math.random() * 600));
+        }
+      }
+      if(lastErr && batch.every(s => s.status !== 'ok')){
+        batch.forEach(s => { s.status = 'error'; s.error = lastErr.message; });
+      }
+      batch.forEach(s => { if(s.status === 'ok') fillSentence(s); else if(s.status === 'error') fillSentenceError(s); });
+      refreshProgress();
+    };
+
+    const queue = batches.slice();
+    const workerCount = Math.max(1, Math.min(CONCURRENCY, queue.length));
+    const workers = Array.from({length: workerCount}, async () => {
+      while(queue.length) await runBatch(queue.shift());
+    });
+    await Promise.all(workers);
+
+    state.hasResult = true;
+    const okSents = state.sentences.filter(s => s.status === 'ok');
+    const failed = total - okSents.length;
+
+    if(okSents.length){
+      buildVocab();
+      renderVocab();
+      $('#printBtn').disabled = false;
+      if(!failed){
+        const saved = saveCache(cacheKey, JSON.stringify({
+          v: 5,
+          sentences: state.sentences.map(s => ({text:s.text, data:s.data, para:s.para}))
+        }));
+        if(!saved) setStatus('结果已生成，但浏览器缓存空间不足，本次未写入本地缓存', 'err');
+      }
+    }else{
+      setStatus('全部分析失败，请检查 API Key、余额或网络后重试', 'err');
+    }
+
+    if(okSents.length){
+      const fb = state.splitFallback ? `（${state.splitFallback}）` : '';
+      setStatus(
+        failed ? `完成：${okSents.length} 句成功，${failed} 句失败${fb}（可在句内点「重试」）`
+               : `分析完成，共 ${total} 句${fb}`,
+        failed ? 'err' : (state.splitFallback ? 'err' : 'ok')
+      );
+    }
+    if(failed) refreshProgress(); else setProgress(total, total, `已全部完成 · 共 ${total} 句`);
+    later(hideProgress, failed ? 6000 : 2200);
+  }catch(err){
+    // 任何未预期的异常都不能让界面卡在「分析中」
+    setStatus('分析中断：' + (err && err.message ? err.message : err), 'err');
+    hideProgress();
+  }finally{
+    resetButtons();
+  }
+}
+
+/* 从缓存载入 */
+function loadResult(sentArr){
+  state.sentences = sentArr.map(s => ({
+    text: String(s?.text ?? ''),
+    data: s?.data || null,
+    status: s?.data ? 'ok' : 'pending',
+    para: Math.max(0, Number(s?.para) || 0),
+    error: ''
+  }));
+  rebuildParagraphs();
+  state.hasResult = true;
+  renderArticleSkeleton();
+  state.sentences.forEach(s => { if(s.status === 'ok') fillSentence(s); });
+  buildVocab(); renderVocab();
+  $('#printBtn').disabled = false;
+  const inTextTab = $('#tabText').style.display !== 'none';
+  $('#reanalyzeBtn').style.display = inTextTab ? 'inline-flex' : 'none';
+}
+
+function rebuildParagraphs(){
+  const map = new Map();
+  state.sentences.forEach((s,i) => {
+    const p = Math.max(0, Number(s.para) || 0);
+    if(!map.has(p)) map.set(p, []);
+    map.get(p).push(i);
+  });
+  const keys = Array.from(map.keys()).sort((a,b) => a - b);
+  state.paragraphs = keys.map(k => map.get(k));
+}
+
+/* ============================================================
+   文章渲染
+   ============================================================ */
+const DETAIL_EVENTS = new WeakSet();
+
+function renderArticleSkeleton(){
+  $('#emptyArticle').style.display = 'none';
+  $('#articleWrap').style.display = 'block';
+  const words = state.sentences.reduce((a,s) => a + (s.text.trim() ? s.text.trim().split(/\s+/).length : 0), 0);
+  $('#articleMeta').textContent = `${state.sentences.length} 句 · ${state.paragraphs.length} 段 · 约 ${words} 词 · 点击句子展开精析 · 双击单词看详解`;
+  $('#article').innerHTML = state.paragraphs.map(idxs =>
+    '<div class="para"><div class="prose">' + idxs.map(i => {
+      const s = state.sentences[i];
+      const skeleton = s.status === 'pending' && state.analyzing ? skeletonHTML() : '';
+      return `<span class="p-sent" data-idx="${i}"><span class="p-num">${i+1}</span><span class="p-text">${esc(s.text)}</span><span class="p-detail">${skeleton}</span></span>`;
+    }).join(' ') + '</div></div>'
+  ).join('');
+  $('#article').querySelectorAll('.p-sent').forEach(el => {
+    // 原句文字上的任何点击都交给 .p-detail 内部（空的时候什么都不做），
+    // 这样双击单词取上下文时一定是"这一句"，不会错位成别的句子
+    el.addEventListener('click', e => {
+      if(e.target.closest('.p-detail')) return;   // 详情区内的点击不触发折叠
+      if(e.target.closest('.p-text')) return;     // 原句文字不折叠，留给双击取词
+      const idx = +el.dataset.idx;
+      if(state.sentences[idx]?.status === 'pending') return;  // 还没结果时不做无意义的开合
+      toggleSentence(idx);
+    });
+  });
+  applyFilter();
+}
+
+function skeletonHTML(){
+  return '<div class="sent-skeleton"><div class="sk w90"></div><div class="sk w70"></div><div class="sk w50"></div></div>';
+}
+
+/* 把一句话的详情内容构建出来（幂等，事件只绑定一次） */
+function ensureBuilt(el, s, idx){
+  const detail = el.querySelector('.p-detail');
+  if(!detail) return;
+  if(el.dataset.built === '1' && detail.dataset.state === 'ok') return;
+  detail.innerHTML = buildFullDetailHTML(s);
+  detail.dataset.state = 'ok';
+  el.dataset.built = '1';
+  el.classList.add('has-detail');
+  if(!DETAIL_EVENTS.has(detail)){
+    DETAIL_EVENTS.add(detail);
+    bindUnitEvents(el);
+  }
+}
+
+function toggleSentence(idx, forceOpen){
+  const s = state.sentences[idx];
+  if(!s) return;
+  const el = $('#article').querySelector(`.p-sent[data-idx="${idx}"]`);
+  if(!el) return;
+  const willOpen = forceOpen === true ? true : !el.classList.contains('open');
+  if(willOpen && s.status === 'ok') ensureBuilt(el, s, idx);
+  el.classList.toggle('open', willOpen);
+}
+
+$('#expandAllBtn').onclick = () => {
+  const targets = state.sentences.map((s,i) => s.status === 'ok' ? i : -1).filter(i => i >= 0);
+  if(!targets.length){ setStatus('暂无可展开的句子', 'err'); return; }
+  let p = 0;
+  const step = () => {
+    const t0 = performance.now();
+    while(p < targets.length && performance.now() - t0 < 12) toggleSentence(targets[p++], true);
+    if(p < targets.length){
+      setStatus(`正在展开 ${p} / ${targets.length} 句…`, 'busy');
+      requestAnimationFrame(step);
+    }else{
+      setStatus(`已展开 ${targets.length} 句`, 'ok');
+      later(() => { if($('#status').textContent.startsWith('已展开')) setStatus(''); }, 1800);
+    }
+  };
+  requestAnimationFrame(step);
+};
+$('#collapseAllBtn').onclick = () => {
+  $('#article').querySelectorAll('.p-sent.open').forEach(el => el.classList.remove('open'));
+};
+
+function fillSentence(s){
+  const idx = state.sentences.indexOf(s);
+  if(idx < 0) return;
+  const el = $('#article').querySelector(`.p-sent[data-idx="${idx}"]`);
+  if(!el) return;
+  const detail = el.querySelector('.p-detail');
+  detail.innerHTML = '';
+  delete detail.dataset.state;
+  delete el.dataset.built;
+  el.classList.remove('has-detail');
+  if(el.classList.contains('open')){ el.classList.remove('open'); toggleSentence(idx, true); }
+}
+
+function fillSentenceError(s){
+  const idx = state.sentences.indexOf(s);
+  if(idx < 0) return;
+  const el = $('#article').querySelector(`.p-sent[data-idx="${idx}"] .p-detail`);
+  if(!el) return;
+  el.dataset.state = 'error';
+  el.innerHTML = `<div class="sent-error">分析失败：${esc(s.error || '未知错误')} <button data-retry="${idx}">重试</button></div>`;
+  const host = el.closest('.p-sent');
+  if(host){ host.classList.add('open'); delete host.dataset.built; }
+  const btn = el.querySelector('[data-retry]');
+  if(btn) btn.onclick = async (e) => {
+    e.stopPropagation();
+    const i = +e.currentTarget.dataset.retry;
+    const sent = state.sentences[i];
+    if(!sent || sent.status === 'pending') return;
+    sent.status = 'pending';
+    btn.disabled = true;
+    el.innerHTML = '<div class="sent-error" style="color:#8a919e">正在重试…</div>';
+    try{
+      const raw = await callAPI(buildAnalysisMessages([sent]));
+      const obj = parseJSON(raw);
+      const item = obj.sentences?.[0];
+      if(item && Array.isArray(item.segments) && item.segments.length){
+        sent.data = item; sent.status = 'ok'; sent.error = '';
+        fillSentence(sent);
+        toggleSentence(i, true);
+        buildVocab(); renderVocab();
+        setStatus('重试成功', 'ok');
+      }else{
+        throw new Error('返回格式异常');
+      }
+    }catch(err){
+      sent.status = 'error'; sent.error = err.message;
+      fillSentenceError(sent);
+      setStatus('重试失败：' + err.message, 'err');
+    }
+  };
+}
+</script>
+
+<script>
+/* ============================================================
+   逐词标注构建
+   ============================================================ */
+/* 分词：把小写词、数字、含连字符/撇号的词各当作一个整体，其余（标点、空格）逐字符 */
+function tokenize(sent){
+  const tokens = [];
+  const re = /[A-Za-z0-9]+(?:[-'’][A-Za-z0-9]+)*|[^\sA-Za-z0-9]/g;
+  let m;
+  while((m = re.exec(sent)) !== null){
+    tokens.push({text:m[0], start:m.index, end:m.index + m[0].length, isWord:/[A-Za-z0-9]/.test(m[0])});
+  }
+  return tokens;
+}
+
+/* 在原文中定位 AI 返回的成分段，输出连续、互不重叠、可完整覆盖原文的区间。
+   关键：先把 AI 给的范围吸附到“词边界”，再按 token 边界交错切分，
+   这样即使 AI 截断了单词或给了重叠范围，输出也不会丢字/重字。 */
+function alignSegments(sent, segments, tokens){
+  const wordish = c => /[A-Za-z0-9]/.test(c || '');
+  const wordStartAt = pos => { const t = tokens.find(t => t.isWord && t.start <= pos && pos < t.end); return t ? t.start : pos; };
+  const wordEndAt = pos => { const t = tokens.find(t => t.isWord && t.start < pos && pos <= t.end); return t ? t.end : pos; };
+
+  const findRange = (needle, from) => {
+    let idx = sent.indexOf(needle, from);
+    if(idx < 0) idx = sent.indexOf(needle);
+    if(idx < 0) return null;
+    let s0 = idx, e0 = idx + needle.length;
+    if(wordish(needle[0])) while(s0 > 0 && wordish(sent[s0-1])) s0--;
+    if(wordish(needle[needle.length-1])) while(e0 < sent.length && wordish(sent[e0])) e0++;
+    return {rawStart:idx, rawEnd:idx + needle.length, start:s0, end:e0};
+  };
+
+  const items = [];
+  let searchFrom = 0;
+  (segments || []).forEach(raw => {
+    if(raw == null) return;
+    const needle = String(raw.text == null ? '' : raw.text);
+    if(!needle) return;
+    const r = findRange(needle, searchFrom) || findRange(needle, 0);
+    if(!r) return;
+    const type = TYPES[raw.type] ? raw.type : 'other';
+    items.push({start:Math.min(r.start, r.rawStart), end:Math.max(r.end, r.rawEnd), type, note:raw.note ? String(raw.note) : ''});
+  });
+
+  /* 按 token 边界把区间切成互不重叠、首尾相连的小块 */
+  const out = [];
+  let pos = 0;
+  for(const it of items){
+    if(it.end <= pos) continue;
+    const s0 = Math.max(pos, it.start);
+    const end = Math.max(s0, Math.min(sent.length, it.end));
+    if(s0 > pos) out.push({start:pos, end:s0, type:'other', note:''});
+    let p = s0;
+    for(const tk of tokens){
+      if(tk.end <= p || tk.start >= end) continue;
+      const a = Math.max(p, tk.start), b = Math.min(tk.end, end);
+      if(a >= b) continue;
+      if(a > p) out.push({start:p, end:a, type:'other', note:''});
+      out.push({start:a, end:b, type:it.type, note:it.note});
+      p = b;
+    }
+    if(p < end) out.push({start:p, end:end, type:it.type, note:it.note});
+    pos = Math.max(pos, end);
+  }
+  if(pos < sent.length) out.push({start:pos, end:sent.length, type:'other', note:''});
+
+  /* 数值兜底：强制单调、连续、覆盖全文 */
+  let cursor = 0;
+  return out.map(r => {
+    const start = cursor;
+    const end = Math.max(start, Math.min(sent.length, r.end));
+    cursor = end;
+    return {start, end, type:r.type, note:r.note};
+  }).filter(r => r.end > r.start);
+}
+
+/* 在原文中定位重点词汇/词组（长短语优先，词边界对齐，整体命中整词）
+   返回 {start,end,t,pos,key,extended}；extended 表示实际渲染范围被词边界放大过 */
+function locateGlosses(sent, gloss, tokens){
+  let items = (gloss || [])
+    .filter(g => g && g.w && String(g.w).trim() && g.t)
+    .map(g => ({w:String(g.w).trim(), t:String(g.t), pos:g.pos ? String(g.pos) : ''}));
+  const seen = new Set();
+  items = items.filter(g => { const k = g.w.toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; });
+  items.sort((a,b) => b.w.length - a.w.length);
+
+  const wordTokens = tokens.filter(t => t.isWord);
+  const used = [];
+  const found = [];
+  const norm = x => String(x).toLowerCase().replace(/[^a-z0-9']/g, '');
+  const headMatch = (text, part) => {
+    const n = norm(text), p = norm(part);
+    if(!n || !p) return false;
+    return n === p || n.startsWith(p) || p.startsWith(n);
+  };
+
+  for(const g of items){
+    const parts = g.w.toLowerCase().split(/\s+/).filter(Boolean);
+    if(!parts.length) continue;
+    /* 起点：某个词与词条首词匹配（允许 AI 截断词尾） */
+    let i0 = wordTokens.findIndex(t => headMatch(t.text, parts[0]));
+    if(i0 < 0) continue;
+    let start = wordTokens[i0].start;
+    let end = wordTokens[i0].end;
+
+    /* 多词词组：沿 token 顺序逐词匹配，允许空格、标点与轻度词形差异 */
+    if(parts.length > 1){
+      let pi = 1, k = i0 + 1, ok = false;
+      while(pi < parts.length && k < wordTokens.length){
+        const tk = wordTokens[k];
+        if(tk.start - end > 60) break;                     // 跨度过大，判定为跨句乱配
+        if(headMatch(tk.text, parts[pi])){ end = tk.end; pi++; }
+        k++;
+      }
+      if(pi >= parts.length) ok = true;
+      if(!ok) continue;                                    // 没能完整匹配，跳过该词条
+    }
+    if(end <= start) continue;
+    if(used.some(([s,e]) => start < e && end > s)) continue;
+    used.push([start, end]);
+    found.push({start, end, t:g.t, pos:g.pos, key:g.w.toLowerCase(), extended:end - start !== g.w.length});
+  }
+  return found;
+}
+
+/* 根据成分配置生成文字样式（底色由成分级包裹容器统一绘制，保证连贯） */
+function unitStyle(tconf){
+  let s = `color:${tconf.color}`;
+  if(tconf.bold) s += ';font-weight:700';
+  if(tconf.italic) s += ';font-style:italic';
+  return s;
+}
+
+/* withTitle：true 时给成分加原生 title 属性 */
+function buildDetailHTML(s, withTitle = false){
+  const sent = String(s.text || ''), d = s.data || {};
+  const tokens = tokenize(sent);
+  const segs = alignSegments(sent, d.segments, tokens);
+  const glosses = locateGlosses(sent, d.gloss, tokens);
+  const typeAt = pos => {
+    const r = segs.find(r => pos >= r.start && pos < r.end);
+    return r ? r.type : 'other';
+  };
+  const noteAt = pos => {
+    const r = segs.find(r => pos >= r.start && pos < r.end);
+    return r && r.note ? r.note : '';
+  };
+  const glossAt = pos => glosses.find(g => pos >= g.start && pos < g.end) || null;
+
+  const parts = [];
+  /* 切分符号（标点、空格、括号）不再作为裸文本输出：给它们套上与所属成分同色的 unit，
+     否则它们会继承详情面板的深色 --ink，出现「一个括号黑、一个括号灰」的错色问题。
+     符号只染色、不加粗不倾斜，避免标点比单词还抢眼。 */
+  const markStyle = tconf => tconf && tconf.color ? ` style="color:${tconf.color}"` : '';
+  const pushMark = tk => {
+    const type = typeAt(tk.start);
+    const tconf = TYPES[type];
+    const html = `<span class="unit" data-type="${type}" data-note="">` +
+      `<span class="w" data-w="${escA(tk.text)}"${markStyle(tconf)}>${esc(tk.text)}</span></span>`;
+    parts.push({html, bg:tconf && tconf.bg ? tconf.bg : null, space:''});
+  };
+
+  let i = 0;
+  while(i < tokens.length){
+    const tk = tokens[i];
+    if(!tk.isWord){ pushMark(tk); i++; continue; }
+
+    const g = glossAt(tk.start);
+    let unitEnd = tk.end, display = tk.text, j = i;
+    if(g){
+      // 词条可能跨多个 token：把范围内的 token 连同它们之间的空格整体合成一个 unit
+      while(j + 1 < tokens.length && tokens[j+1].start < g.end){
+        j++;
+        display += sent.slice(tokens[j-1].end, tokens[j].start) + tokens[j].text;
+      }
+      // 兜底：截断点绝不落在单词中间，否则残余字母会被当成普通文本重复输出
+      unitEnd = Math.max(g.end, tokens[j].end);
+    }
+    // 紧随其后的标点（逗号、句号、括号等）跟着 unit 一起走，保证与词条连成一体
+    let k = j;
+    while(k + 1 < tokens.length && !tokens[k+1].isWord && tokens[k+1].start === unitEnd){
+      k++; display += tokens[k].text; unitEnd = tokens[k].end;
+    }
+
+    /* 类型判定：以 unit 内的词为准；若整块都是符号，则用符号自身的成分。
+       另外，若某个成分恰好从本 unit 末尾的符号处开始（如 "...employer)" 后面紧跟 parenthesis 段），
+       该符号跟随后面的成分着色 —— 这样成对括号不会一个黑一个灰。 */
+    const tally = new Map();
+    let wordCount = 0;
+    for(let x = i; x <= k; x++){
+      if(!tokens[x].isWord) continue;
+      wordCount++;
+      const t = typeAt(tokens[x].start);
+      tally.set(t, (tally.get(t) || 0) + 1);
+    }
+    for(let x = k; x > i && !tokens[x].isWord; x--){
+      const next = segs.find(r => r.start === tokens[x].end);   // 紧随其后的成分，符号跟它同色
+      const here = segs.find(r => tokens[x].start >= r.start && tokens[x].start < r.end);
+      const t = (next || here || {type:'other'}).type;
+      tally.set(t, (tally.get(t) || 0) + 0.9);
+    }
+    let type = 'other', best = -1;
+    tally.forEach((v, key) => {
+      const w = TYPES[key] && TYPES[key].bg ? 2 : 1;     // 有色块的成分优先，避免被零碎 other 吃掉
+      if(v * w > best){ best = v * w; type = key; }
+    });
+    if(!wordCount && !tally.size) type = typeAt(tk.start);
+    const note = noteAt(tk.start) || noteAt(tokens[k].start);
+    const tconf = TYPES[type] || TYPES.other;
+    const bgType = !!(tconf.bg);
+    const colored = type !== 'other';
+    const wStyle = colored ? ` style="${unitStyle(tconf)}"` : '';
+    const cls = ['unit'];
+    if(colored) cls.push('clickable');
+    if(g) cls.push('has-gloss');
+    const title = (withTitle && colored) ? ` title="${esc(tconf.label + (note ? '：' + note : ''))}"` : '';
+    /* 单词内部夹着的符号（如 3.5 的点）不算尾随符号，跟单词一起正常染色；
+       只有真正拖在单词后面的符号（逗号、句号、括号）才单独包一层，
+       去掉粗体/斜体继承，保证成对括号看起来一致 */
+    let lastWordIdx = i;
+    for(let x = i; x <= k; x++) if(tokens[x].isWord) lastWordIdx = x;
+    const trailing = [];
+    for(let x = lastWordIdx + 1; x <= k; x++) if(!tokens[x].isWord) trailing.push(tokens[x]);
+    const headEnd = trailing.length ? trailing[0].start : unitEnd;
+    const headText = sent.slice(tokens[i].start, headEnd);
+    const symStyle = markStyle(tconf);
+    let wInner = esc(headText);
+    if(trailing.length){
+      if(g){
+        /* 整条词条（含尾标点）作为一个整体，统一的符号样式 */
+        wInner = `<span class="unit-sym"${symStyle}>${esc(display)}</span>`;
+      }else{
+        wInner += esc(sent.slice(headEnd, trailing[0].start));
+        trailing.forEach((tk2, n) => {
+          const style = markStyle(TYPES[typeAt(tk2.start)]) || symStyle;
+          wInner += `<span class="unit-sym"${style}>${esc(tk2.text)}</span>`;
+          const nxt = trailing[n+1];
+          if(nxt) wInner += esc(sent.slice(tk2.end, nxt.start));
+        });
+      }
+    }
+    const unitHtml = `<span class="${cls.join(' ')}" data-type="${type}" data-note="${esc(note)}"${g ? ` data-vk="${escA(g.key)}"` : ''}${title}>` +
+      `<span class="w" data-w="${escA(display)}"${wStyle}>${wInner}</span>` +
+      `<span class="gloss">${g ? esc(g.t) : ''}</span></span>`;
+    const nextStart = (k + 1 < tokens.length) ? tokens[k+1].start : sent.length;
+    parts.push({html:unitHtml, bg:bgType ? tconf.bg : null, space:esc(sent.slice(unitEnd, nextStart))});
+    i = k + 1;
+  }
+
+  let html = '<div class="annotated">';
+  let openBg = null;   // 相邻成分底色相同（如主谓宾表共用黄底）时，色块连成一片
+  const closeWrap = () => { if(openBg){ html += '</span>'; openBg = null; } };
+  parts.forEach((p, idx) => {
+    if(p.bg){
+      if(openBg !== p.bg){
+        closeWrap();
+        html += `<span class="seg-wrap" style="background:${p.bg}">`;
+        openBg = p.bg;
+      }
+      html += p.html;
+      const next = parts[idx+1];
+      if(next && next.bg === p.bg){
+        html += p.space;              // 同底色的相邻成分之间，空格留在色块内，保持连贯
+      }else{
+        closeWrap(); html += p.space;
+      }
+    }else{
+      closeWrap();
+      html += p.html + p.space;
+    }
+  });
+  closeWrap();
+  html += '</div>';
+  return html;
+}
+
+/* 整句翻译（点击可复制） */
+function buildTransHTML(s){
+  const t = s.data && s.data.trans;
+  if(!t) return '';
+  return `<div class="trans" role="button" tabindex="0" title="点击复制译文"><span class="trans-tag">译文</span>${esc(t)}</div>`;
+}
+
+/* 完整详情 = 逐词标注 + 整句翻译 */
+function buildFullDetailHTML(s, withTitle = false){
+  const tools = '<div class="detail-tools">' +
+    `<button class="mini-btn" data-copy-sent="${state.sentences.indexOf(s)}">复制原句</button>` +
+    `<button class="mini-btn" data-copy-trans="${state.sentences.indexOf(s)}">复制译文</button>` +
+    '</div>';
+  return buildDetailHTML(s, withTitle) + buildTransHTML(s) + tools;
+}
+
+/* ============================================================
+   详情区交互：单击涂黄 · 双击 AI 详解
+   ============================================================ */
+/* 单击选中：荧光笔涂黄，同一时刻只保留一处 */
+let pickedUnit = null;
+function pickUnit(u){
+  if(pickedUnit && pickedUnit !== u) pickedUnit.classList.remove('picked');
+  if(pickedUnit === u){
+    u.classList.remove('picked');
+    pickedUnit = null;
+    return;
+  }
+  pickedUnit = u;
+  u.classList.remove('picked');
+  void u.offsetWidth;          // 重启动画
+  u.classList.add('picked');
+}
+function clearPick(){
+  if(pickedUnit){ pickedUnit.classList.remove('picked'); pickedUnit = null; }
+}
+
+/* 触屏上双击/选中都不可靠，所以给单词单元加"长按 500ms 查词" */
+const LONG_PRESS_MS = 500;
+function attachLongPress(el, word, getSent){
+  let timer = null, longFired = false;
+  let sx = 0, sy = 0;
+  const cancel = () => { if(timer){ clearTimeout(timer); timer = null; } };
+  el.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1) return;
+    longFired = false;
+    const t = e.touches[0];
+    sx = t.clientX; sy = t.clientY;
+    cancel();
+    timer = setTimeout(() => {
+      timer = null;
+      /* 用户是在选字的话就别抢 */
+      const sel = window.getSelection && String(window.getSelection());
+      if(sel && sel.trim()) return;
+      longFired = true;
+      if(navigator.vibrate) { try{ navigator.vibrate(18); }catch(_){} }
+      const w = word();
+      if(w) explainWord(w, getSent(), false, el.closest('.p-sent') ? state.sentences[+el.closest('.p-sent').dataset.idx] : null);
+    }, LONG_PRESS_MS);
+  }, {passive:true});
+  el.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if(!t) return;
+    if(Math.abs(t.clientX - sx) > 10 || Math.abs(t.clientY - sy) > 10) cancel();   // 在滑动页面
+  }, {passive:true});
+  ['touchend','touchcancel'].forEach(t => el.addEventListener(t, cancel, {passive:true}));
+  /* 长按已触发时，抬手产生的 click 要吞掉，否则会顺带涂黄/折叠 */
+  el.addEventListener('click', e => {
+    if(longFired){ e.stopPropagation(); e.preventDefault(); longFired = false; }
+  }, true);
+}
+
+function bindUnitEvents(scope){
+  // 双击任意单词 → AI 详解
+  scope.querySelectorAll('.unit').forEach(u => {
+    u.addEventListener('dblclick', e => {
+      e.preventDefault(); e.stopPropagation();
+      const word = (u.querySelector('.w')?.textContent || '').trim();
+      if(!word) return;
+      pickUnit(u);            // 双击也保持荧光标记，视觉上不"掉色"
+      const sentEl = u.closest('.p-sent');
+      const sObj = sentEl ? state.sentences[+sentEl.dataset.idx] : null;
+      explainWord(word, sObj ? sObj.text : '', false, sObj);
+    });
+    // 触屏：长按查词
+    attachLongPress(u,
+      () => (u.querySelector('.w')?.textContent || '').trim(),
+      () => { const se = u.closest('.p-sent'); return se ? (state.sentences[+se.dataset.idx]?.text || '') : ''; });
+  });
+  // 原句文字上双击 → 用整句作上下文，这也是 AI 解释的入口
+  scope.querySelectorAll('.p-text').forEach(el => {
+    attachLongPress(el,
+      () => String(window.getSelection ? window.getSelection() : '').trim(),
+      () => { const se = el.closest('.p-sent'); return se ? (state.sentences[+se.dataset.idx]?.text || '') : ''; });
+    el.addEventListener('dblclick', e => {
+      const sel = String(window.getSelection ? window.getSelection() : '').trim();
+      if(!sel) return;                       // 没选中单词就交给浏览器默认行为
+      e.preventDefault(); e.stopPropagation();
+      const sentEl = el.closest('.p-sent');
+      const sObj = sentEl ? state.sentences[+sentEl.dataset.idx] : null;
+      explainWord(sel, sObj ? sObj.text : '', false, sObj);
+    });
+  });
+  // 单击 → 荧光笔高亮（不做任何弹窗）
+  scope.querySelectorAll('.unit.clickable').forEach(u => {
+    u.addEventListener('click', e => {
+      e.stopPropagation();
+      pickUnit(u);
+    });
+  });
+  // 译文点击复制
+  scope.querySelectorAll('.trans').forEach(el => {
+    const doCopy = e => { e.stopPropagation(); copyText(el.textContent.replace(/^译文/, '').trim()); };
+    el.addEventListener('click', doCopy);
+    el.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); doCopy(e); } });
+  });
+  // 复制按钮
+  scope.querySelectorAll('[data-copy-sent],[data-copy-trans]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const isSent = e.currentTarget.dataset.copySent !== undefined;
+      const i = Number(isSent ? e.currentTarget.dataset.copySent : e.currentTarget.dataset.copyTrans);
+      const s = state.sentences[i];
+      if(!s) return;
+      copyText(isSent ? s.text : ((s.data && s.data.trans) || ''));
+    });
+  });
+}
+document.addEventListener('scroll', clearPick, true);
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    clearPick();
+    $('#keyModal').classList.remove('show');
+    $('#wordModal').classList.remove('show');
+  }
+});
+
+/* ============================================================
+   词表
+   ============================================================ */
+function buildVocab(){
+  const map = new Map();
+  state.sentences.forEach(s => {
+    if(s.status !== 'ok' || !s.data) return;
+    const src = (Array.isArray(s.data.vocab) && s.data.vocab.length) ? s.data.vocab : (s.data.gloss || []);
+    src.forEach(v => {
+      if(!v || !v.w || !v.t) return;
+      const key = String(v.w).toLowerCase();
+      if(map.has(key)) return;
+      map.set(key, {w:String(v.w), t:String(v.t), pos:v.pos ? String(v.pos) : '', key});
+    });
+  });
+  state.vocab = Array.from(map.values());
+}
+
+function renderVocab(){
+  // 含空格的归为词组，其余为词汇（连字符词仍算词汇）
+  const words = state.vocab.filter(v => !v.w.includes(' '));
+  const phrases = state.vocab.filter(v => v.w.includes(' '));
+  $('#vocabCount').textContent = state.vocab.length ? state.vocab.length + ' 个' : '';
+  $('#wordCount').textContent = words.length || '';
+  $('#phraseCount').textContent = phrases.length || '';
+  const item = v => `<div class="vi" data-vk="${escA(v.key)}" title="单击定位原文 · 双击 AI 详解"><span class="vw">${esc(v.w)}</span><span class="vp">${esc(v.pos)}</span><div class="vt">${esc(v.t)}</div></div>`;
+  $('#wordList').innerHTML = words.map(item).join('') || '<div class="side-empty">暂无</div>';
+  $('#phraseList').innerHTML = phrases.map(item).join('') || '<div class="side-empty">暂无</div>';
+  $$('.vi[data-vk]').forEach(el => {
+    el.onclick = () => jumpToWord(el.dataset.vk);
+    el.ondblclick = () => {
+      const v = state.vocab.find(x => x.key === el.dataset.vk);
+      const sent = state.sentences.find(s => (s.data?.gloss || []).some(g => g.w && String(g.w).toLowerCase() === el.dataset.vk));
+      explainWord(v ? v.w : el.dataset.vk, sent ? sent.text : '');
+    };
+  });
+}
+
+function jumpToWord(key){
+  const sel = `.unit[data-vk="${escA(key)}"]`;
+  let unit = $('#article').querySelector(sel);
+  if(!unit){
+    // 该词所在句可能尚未展开：先在数据中定位句子并展开，再取标注元素
+    const idx = state.sentences.findIndex(s => s.status === 'ok' &&
+      (s.data?.gloss || []).some(g => g.w && String(g.w).toLowerCase() === key));
+    if(idx >= 0){
+      toggleSentence(idx, true);
+      unit = $('#article').querySelector(sel);
+    }
+  }
+  if(!unit){
+    setStatus('未在原文标注中找到该词（所在句可能尚未分析成功）', 'err');
+    return;
+  }
+  unit.scrollIntoView({block:'center', behavior:'smooth'});
+  pickUnit(unit);          // 与单击一致：荧光笔涂黄，而不是描边方框
+  setStatus('');
+}
+
+/* ============================================================
+   双击 AI 解词
+   ============================================================ */
+/* ---------- 自定义提示词的读写 ---------- */
+function loadPromptCfg(){
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem('ds_word_prompt') || 'null'); }catch(_){}
+  const cfg = {
+    system: (saved && typeof saved.system === 'string') ? saved.system : WORD_PROMPT_DEFAULT.system,
+    user:   (saved && typeof saved.user === 'string' && saved.user.trim()) ? saved.user : WORD_PROMPT_DEFAULT.user,
+    extra:  (saved && typeof saved.extra === 'string') ? saved.extra : ''
+  };
+  return cfg;
+}
+let promptCfg = loadPromptCfg();
+function promptIsDefault(){
+  return promptCfg.system === WORD_PROMPT_DEFAULT.system &&
+         promptCfg.user === WORD_PROMPT_DEFAULT.user &&
+         promptCfg.extra === WORD_PROMPT_DEFAULT.extra;
+}
+/* 提示词指纹：改了提示词，旧缓存自动失效 */
+function promptFingerprint(cfg){
+  return cyrb53(MODEL + '|' + cfg.system + '|' + cfg.user + '|' + cfg.extra);
+}
+
+/* ---------- 占位符填充 ---------- */
+function buildWordContext(word, sent, sentObj){
+  const ctx = {word: word, sentence: sent || '（无上下文）', trans: '（暂无）', context: '（无上下文）', extra: promptCfg.extra || '', schema: WORD_JSON_SCHEMA};
+  if(sentObj){
+    if(sentObj.data && sentObj.data.trans) ctx.trans = sentObj.data.trans;
+    const paras = state.paragraphs || [];
+    const pi = paras.findIndex(list => list.indexOf(state.sentences.indexOf(sentObj)) >= 0);
+    if(pi >= 0){
+      const text = paras[pi].map(i => state.sentences[i] && state.sentences[i].text || '').join(' ').trim();
+      if(text) ctx.context = text.length > 900 ? text.slice(0, 900) + '…' : text;
+    }
+  }
+  return ctx;
+}
+function fillPlaceholders(tpl, ctx){
+  return String(tpl == null ? '' : tpl).replace(/\{(\w+)\}/g, (m, k) =>
+    Object.prototype.hasOwnProperty.call(ctx, k) ? String(ctx[k]) : m);
+}
+/* 模板里是否保留了必需占位符 */
+function promptIssues(userTpl){
+  const out = [];
+  if(!userTpl || !userTpl.trim()) out.push('用户提示词不能为空');
+  if(!/\{word\}/.test(userTpl || '')) out.push('缺少 {word}，AI 不知道要讲哪个词');
+  if(!/\{schema\}/.test(userTpl || '')) out.push('缺少 {schema}，返回格式会不对，解析会失败');
+  return out;
+}
+
+/* 提示词设置弹窗的 UI 绑定放在文件末尾"显示偏好"段：那里所有函数都已就绪 */
+
+function openWordModal(word, sent){
+  $('#wmWord').textContent = word;
+  $('#wmSent').textContent = sent || '';
+  $('#wmSent').style.display = sent ? 'block' : 'none';
+  $('#wmBody').innerHTML = '<div class="wm-loading">AI 正在解析「' + esc(word) + '」…</div>';
+  $('#wordModal').classList.add('show');
+}
+$('#wmClose').onclick = () => $('#wordModal').classList.remove('show');
+$('#wordModal').addEventListener('click', e => { if(e.target.id === 'wordModal') $('#wordModal').classList.remove('show'); });
+$('#wmReexplain').onclick = () => {
+  const w = $('#wmWord').textContent;
+  if(w) explainWord(w, $('#wmSent').textContent, true);
+};
+
+let explainSeq = 0;
+async function explainWord(word, sent, force, sentObj){
+  word = (word || '').trim().replace(/^[\s.,;:!?()"“”‘’'—–-]+|[\s.,;:!?()"“”‘’'—–-]+$/g, '');
+  if(!word) return;
+  if(!requireKey()) return;
+  const seq = ++explainSeq;
+  /* 上下文对象：优先用调用方给的，否则按句子文本反查 */
+  const sObj = sentObj || state.sentences.find(s => s.text === sent) || null;
+  openWordModal(word, sent);
+  const fp = promptFingerprint(promptCfg);
+  const cacheKey = WORD_CACHE_PRE + cyrb53(MODEL + '|' + word.toLowerCase() + '|' + sent + '|' + fp);
+  if(!force){
+    let cached = null;
+    try{ cached = localStorage.getItem(cacheKey); }catch(_){}
+    if(cached){
+      try{
+        const obj = JSON.parse(cached);
+        if(seq === explainSeq) renderWordModal(obj);
+        touchCacheIndex(cacheKey);        // 命中即算"访问过"
+        refreshCacheBtn();
+        return;
+      }catch(_){ try{ localStorage.removeItem(cacheKey); }catch(__){} }
+    }
+  }
+  try{
+    const ctx = buildWordContext(word, sent, sObj);
+    const sys = promptCfg.system || WORD_PROMPT_DEFAULT.system;
+    const user = fillPlaceholders(promptCfg.user, ctx);
+    const raw = await callAPI([{role:'system', content:sys}, {role:'user', content:user}], {maxTokens:2048});
+    const obj = parseJSON(raw);
+    saveCache(cacheKey, JSON.stringify(obj));
+    if(seq === explainSeq) renderWordModal(obj);
+  }catch(err){
+    if(seq === explainSeq) $('#wmBody').innerHTML = '<div class="wm-err">解析失败：' + esc(err.message) + '</div>';
+  }
+}
+
+/* 渲染解词结果：优先用约定的三字段；用户改了提示词导致字段名不同时做通用兜底，
+   数组/对象/纯文本都能显示出来，不至于白屏。 */
+const WM_FIELD_LABEL = {meaning:'语境含义', usage:'用法与搭配', examples:'例句', translation:'翻译',
+                        synonyms:'近义词', collocation:'搭配', collocations:'搭配', note:'备注',
+                        notes:'备注', etymology:'词源', memory:'记忆', mnemonic:'记忆', exam:'考点', tips:'提示'};
+function wmLabel(k){
+  return WM_FIELD_LABEL[k] || (k.charAt(0).toUpperCase() + k.slice(1));
+}
+function wmRenderValue(val){
+  if(val == null) return '';
+  if(typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean'){
+    return `<p>${esc(String(val)).replace(/\n/g, '<br>')}</p>`;
+  }
+  if(Array.isArray(val)){
+    return val.map(item => {
+      if(item == null) return '';
+      if(typeof item === 'string') return `<div class="wm-ex"><div class="en">${esc(item)}</div></div>`;
+      if(typeof item === 'object'){
+        if(item.en || item.zh){
+          return `<div class="wm-ex"><div class="en">${esc(item.en || '')}</div><div class="zh">${esc(item.zh || '')}</div></div>`;
+        }
+        return `<div class="wm-ex">${Object.entries(item).map(([k2, v2]) =>
+          `<div class="zh"><b>${esc(wmLabel(k2))}：</b>${esc(String(v2))}</div>`).join('')}</div>`;
+      }
+      return `<div class="wm-ex">${esc(String(item))}</div>`;
+    }).join('');
+  }
+  if(typeof val === 'object'){
+    return Object.entries(val).map(([k2, v2]) =>
+      `<p><b>${esc(wmLabel(k2))}：</b>${esc(typeof v2 === 'string' ? v2 : JSON.stringify(v2))}</p>`).join('');
+  }
+  return `<p>${esc(String(val))}</p>`;
+}
+function renderWordModal(obj){
+  if(obj == null){ $('#wmBody').innerHTML = '<div class="wm-err">未获取到有效解析</div>'; return; }
+  /* 非对象（AI 直接返回一段文字）就原样显示 */
+  if(typeof obj !== 'object'){
+    const s = String(obj).trim();
+    $('#wmBody').innerHTML = s ? `<div class="wm-sec"><p>${esc(s).replace(/\n/g, '<br>')}</p></div>`
+                               : '<div class="wm-err">未获取到有效解析</div>';
+    return;
+  }
+  let html = '';
+  const preferred = ['meaning', 'usage', 'examples'];
+  const done = new Set();
+  preferred.forEach(k => {
+    if(obj[k] == null) return;
+    done.add(k);
+    html += `<div class="wm-sec"><h4>${wmLabel(k)}</h4>${wmRenderValue(obj[k])}</div>`;
+  });
+  Object.keys(obj).forEach(k => {
+    if(done.has(k)) return;
+    const v = obj[k];
+    if(v == null || v === '') return;
+    if(Array.isArray(v) && !v.length) return;
+    html += `<div class="wm-sec"><h4>${wmLabel(k)}</h4>${wmRenderValue(v)}</div>`;
+  });
+  $('#wmBody').innerHTML = html || '<div class="wm-err">未获取到有效解析</div>';
+}
+</script>
+
+<script>
+/* ============================================================
+   显示偏好（译文 / 释义 / 翻译模式 / 字体）
+   ============================================================ */
+function persist(k, v){ try{ localStorage.setItem(k, v); }catch(_){} }
+function restore(k, d){ try{ return localStorage.getItem(k) ?? d; }catch(_){ return d; } }
+
+let hideTrans = restore('ds_pref_hide_trans', '0') === '1';
+function applyTransPref(){
+  document.body.classList.toggle('hide-trans', hideTrans);
+  $('#transBtn').title = hideTrans ? '显示译文' : '隐藏译文';
+  syncMoreMenu();
+}
+/* 显示模式切换：释义（.gloss）要在「常显」和「悬停才显」之间换 opacity，
+   如果带过渡，切换的那一瞬间所有气泡都会先可见再淡出 —— 所以在改类名前后
+   各关/开一次过渡，让状态直接落到终态，不做补间。 */
+function suppressAnim(apply){
+  const b = document.body;
+  b.classList.add('pref-no-anim');
+  apply();
+  void b.offsetWidth;                                         // 强制样式落定（同一帧内不补间）
+  requestAnimationFrame(() => requestAnimationFrame(() => b.classList.remove('pref-no-anim')));
+}
+
+$('#transBtn').onclick = () => { hideTrans = !hideTrans; persist('ds_pref_hide_trans', hideTrans ? '1' : '0'); suppressAnim(applyTransPref); };
+
+let hideGloss = restore('ds_pref_hide_gloss', '0') === '1';
+function applyGlossPref(){
+  document.body.classList.toggle('no-gloss', hideGloss);
+  $('#glossBtn').title = hideGloss ? '显示释义' : '隐藏释义';
+  syncMoreMenu();
+}
+$('#glossBtn').onclick = () => { hideGloss = !hideGloss; persist('ds_pref_hide_gloss', hideGloss ? '1' : '0'); suppressAnim(applyGlossPref); };
+
+let fontMode = restore('ds_pref_font', 'prose');
+function applyFontPref(){
+  document.body.classList.toggle('font-sans', fontMode === 'sans');
+  document.body.classList.toggle('font-prose', fontMode !== 'sans');
+  $('#fontBtn').title = fontMode === 'sans' ? '当前：无衬线体（点击切回衬线体）' : '当前：衬线体（点击切换无衬线体）';
+  syncMoreMenu();
+}
+$('#fontBtn').onclick = () => { fontMode = fontMode === 'sans' ? 'prose' : 'sans'; persist('ds_pref_font', fontMode); applyFontPref(); };
+
+function applyModePref(hover){
+  $$('#modeToggle button').forEach(x => x.classList.toggle('on', (x.dataset.mode === 'hover') === hover));
+  document.body.classList.toggle('mode-hover', hover);
+}
+let hoverMode = restore('ds_pref_mode', 'always') === 'hover';
+$$('#modeToggle button').forEach(b => {
+  b.onclick = () => {
+    hoverMode = b.dataset.mode === 'hover';
+    persist('ds_pref_mode', hoverMode ? 'hover' : 'always');
+    suppressAnim(() => applyModePref(hoverMode));
+  };
+});
+
+/* ============================================================
+   AI 解词提示词设置（UI 绑定）
+   ============================================================ */
+const PH_LABEL = {word:'{word} 当前单词', sentence:'{sentence} 所在句子', trans:'{trans} 该句译文',
+                  context:'{context} 所在段落', extra:'{extra} 额外要求(上方)', schema:'{schema} 输出格式(必需)'};
+
+function renderPhChips(){
+  const row = $('#pmPhRow');
+  row.innerHTML = WORD_PLACEHOLDERS.map(k =>
+    `<span class="ph-chip${k === 'schema' ? ' locked' : ''}" data-ph="${k}" title="${k === 'schema' ? '输出格式，必须保留在提示词里' : '点击插入到光标处'}">${PH_LABEL[k]}</span>`
+  ).join('');
+  row.querySelectorAll('.ph-chip').forEach(c => {
+    c.onclick = () => {
+      const k = c.dataset.ph;
+      const ta = $('#pfUser');
+      if(k === 'schema'){
+        if(!/\{schema\}/.test(ta.value)) ta.value = ta.value.replace(/\s*$/, '\n\n{schema}');
+        updatePromptPreview();
+        return;
+      }
+      const token = '{' + k + '}';
+      const s = ta.selectionStart == null ? ta.value.length : ta.selectionStart;
+      const e = ta.selectionEnd == null ? s : ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + token + ta.value.slice(e);
+      ta.focus();
+      ta.selectionStart = ta.selectionEnd = s + token.length;
+      updatePromptPreview();
+    };
+  });
+}
+function updatePromptPreview(){
+  const fake = {word:'abandon', sentence:'He abandoned his car in the snow.',
+                trans:'他把车丢在了雪地里。', context:'He abandoned his car in the snow and walked home.',
+                extra:$('#pfExtra').value.trim(), schema:WORD_JSON_SCHEMA};
+  const user = fillPlaceholders($('#pfUser').value, fake);
+  const sys = $('#pfSystem').value.trim();
+  const issues = promptIssues($('#pfUser').value);
+  const warn = $('#pfWarn');
+  warn.className = 'prompt-note' + (issues.length ? ' warn' : '');
+  warn.textContent = issues.length ? '⚠ ' + issues.join('；') : '✓ 提示词完整，可以保存';
+  $('#pmSave').disabled = issues.length > 0;
+  $('#pfPreview').textContent = (sys ? '【system】\n' + sys + '\n\n' : '') + '【user】\n' + (user.trim() || '（空）');
+}
+function openPromptModal(){
+  $('#pfUser').value = promptCfg.user;
+  $('#pfSystem').value = promptCfg.system;
+  $('#pfExtra').value = promptCfg.extra;
+  renderPhChips();
+  updatePromptPreview();
+  $('#promptModal').classList.add('show');
+  later(() => $('#pfUser').focus(), 60);
+}
+/* 顶栏那个齿轮按钮的绑定必须放在这里：block2 里 openPromptModal 还没定义 */
+$('#promptBtn').onclick = openPromptModal;
+$('#wmEditPrompt').onclick = () => { $('#wordModal').classList.remove('show'); openPromptModal(); };
+$('#pmClose').onclick = () => $('#promptModal').classList.remove('show');
+$('#pmCancel').onclick = () => $('#promptModal').classList.remove('show');
+$('#promptModal').addEventListener('click', e => { if(e.target.id === 'promptModal') $('#promptModal').classList.remove('show'); });
+$('#pfUser').addEventListener('input', updatePromptPreview);
+$('#pfExtra').addEventListener('input', updatePromptPreview);
+$('#pfSystem').addEventListener('input', updatePromptPreview);
+$('#pmReset').onclick = () => {
+  if(!confirm('恢复为默认提示词？（你自己改的内容会丢失）')) return;
+  $('#pfUser').value = WORD_PROMPT_DEFAULT.user;
+  $('#pfSystem').value = WORD_PROMPT_DEFAULT.system;
+  $('#pfExtra').value = WORD_PROMPT_DEFAULT.extra;
+  updatePromptPreview();
+};
+$('#pmSave').onclick = () => {
+  const issues = promptIssues($('#pfUser').value);
+  if(issues.length){ alert('提示词不完整：' + issues.join('；')); return; }
+  promptCfg = {system:$('#pfSystem').value.trim() || WORD_PROMPT_DEFAULT.system,
+               user:$('#pfUser').value, extra:$('#pfExtra').value.trim()};
+  try{ localStorage.setItem('ds_word_prompt', JSON.stringify(promptCfg)); }catch(_){}
+  $('#promptModal').classList.remove('show');
+  setStatus(promptIsDefault() ? '已恢复默认提示词' : '已保存你的提示词，之后解词都用它', 'ok');
+};
+
+/* ============================================================
+   多端适配：更多菜单 / 词汇抽屉 / 屏宽状态
+   ============================================================ */
+const wideQuery = window.matchMedia ? window.matchMedia('(min-width: 901px)') : null;
+function applyWide(v){ document.body.classList.toggle('wide', !!v); if(v) closeMoreMenu(); }
+if(wideQuery){
+  applyWide(wideQuery.matches);
+  if(wideQuery.addEventListener) wideQuery.addEventListener('change', e => applyWide(e.matches));
+  else if(wideQuery.addListener) wideQuery.addListener(e => applyWide(e.matches));
+}else{
+  applyWide(window.innerWidth > 900);
+}
+
+function closeMoreMenu(){
+  const m = $('#moreMenu');
+  if(m) m.classList.remove('show');
+  const b = $('#moreBtn');
+  if(b) b.setAttribute('aria-expanded', 'false');
+}
+/* 保持「更多」菜单里的文字与当前状态一致 */
+function syncMoreMenu(){
+  const t = $('#mmTrans'), g = $('#mmGloss'), f = $('#mmFont');
+  if(t) t.textContent = hideTrans ? '显示译文' : '隐藏译文';
+  if(g) g.textContent = hideGloss ? '显示释义' : '隐藏释义';
+  if(f) f.textContent = fontMode === 'sans' ? '切换为衬线体' : '切换为无衬线体';
+}
+$('#moreBtn').onclick = e => {
+  e.stopPropagation();
+  const m = $('#moreMenu');
+  const willShow = !m.classList.contains('show');
+  syncMoreMenu();
+  m.classList.toggle('show', willShow);
+  $('#moreBtn').setAttribute('aria-expanded', willShow ? 'true' : 'false');
+};
+$('#moreMenu').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]');
+  if(!btn) return;
+  e.stopPropagation();
+  const act = btn.dataset.act;
+  closeMoreMenu();
+  if(act === 'mode-always' || act === 'mode-hover'){
+    hoverMode = act === 'mode-hover';
+    persist('ds_pref_mode', hoverMode ? 'hover' : 'always');
+    suppressAnim(() => applyModePref(hoverMode));
+  }
+  else if(act === 'trans') $('#transBtn').click();
+  else if(act === 'gloss') $('#glossBtn').click();
+  else if(act === 'font') $('#fontBtn').click();
+  else if(act === 'expand') $('#expandAllBtn').click();
+  else if(act === 'collapse') $('#collapseAllBtn').click();
+  else if(act === 'print'){ if(!$('#printBtn').disabled) $('#printBtn').click(); else setStatus('还没有可打印的分析结果', 'err'); }
+  else if(act === 'cache') openCacheModal();
+  else if(act === 'prompt') openPromptModal();
+});
+document.addEventListener('click', closeMoreMenu);
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMoreMenu(); });
+/* 词汇侧栏：手机上点标题展开/收起 */
+$('#vocabHead').addEventListener('click', () => {
+  if(document.body.classList.contains('wide')) return;
+  document.body.classList.toggle('vocab-open');
+});
+
+/* ============================================================
+   打印 / 导出
+   ============================================================ */
+function ensureAllBuilt(){
+  const pending = state.sentences.filter(s => s.status === 'ok');
+  pending.forEach(s => {
+    const i = state.sentences.indexOf(s);
+    const el = $('#article').querySelector(`.p-sent[data-idx="${i}"]`);
+    if(el) ensureBuilt(el, s, i);
+  });
+  applyFilter();
+}
+window.addEventListener('beforeprint', ensureAllBuilt);
+$('#printBtn').onclick = () => { ensureAllBuilt(); window.print(); };
+
+/* 标注区字体偏好默认值 */
+if(!restore('ds_pref_font', null)) fontMode = 'prose';
+
+/* ============================================================
+   初始化
+   ============================================================ */
+$('#modelTag').textContent = MODEL_LABEL;
+renderLegend();
+applyTransPref();
+applyGlossPref();
+applyFontPref();
+suppressAnim(() => applyModePref(hoverMode));   // 初始化同样不做补间，避免每次载入闪一下
+/* 每次打开页面先执行一次过期底线：超过 7 天未访问的缓存直接清掉 */
+try{
+  const cleaned = cleanupExpiredCache();
+  if(cleaned.removed) console.info(`[长难句工具] 已自动清除 ${cleaned.removed} 条过期缓存（超过 ${CACHE_TTL_DAYS} 天未访问）`);
+}catch(_){}
+refreshCacheBtn();
+if(state.apiKey) $('#keyBtn').textContent = 'API Key ✓';
+window.addEventListener('error', e => {
+  // 兜底：任何脚本异常都不让按钮卡死
+  if(state.analyzing){ resetButtons(); hideProgress(); }
+  console.error('[长难句工具]', e.error || e.message);
+});
+</script>
+</body>
+</html>
