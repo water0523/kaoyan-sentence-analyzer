@@ -12,7 +12,7 @@
   --shadow:0 1px 2px rgba(28,35,51,.05),0 4px 16px rgba(28,35,51,.06);
   --shadow-lg:0 18px 50px rgba(28,35,51,.14);
   --ease:cubic-bezier(.22,.61,.36,1);
-  --topbar-h:56px; --legend-h:35px;
+  --topbar-h:56px; --legend-h:65px;   /* 图例两行：成分 / 从句 */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -52,23 +52,27 @@ body.font-sans .annotated{font-family:-apple-system,BlinkMacSystemFont,"PingFang
    否则 901~1080px 这一段字体切换会变得完全不可达。
    字体按钮统一跟其它次要图标一起，到 ≤900px 才收进「更多」。 */
 
-/* ---------- 图例栏 ---------- */
+/* ---------- 图例栏 ----------
+   15 个 chip 挤在一行会溢出、被截断（截图里「同位语从句」之后全看不见）。
+   改成两组两行：左边一个固定宽度的组标签，右边是 chip，每组各自可横向滚动。 */
 .legend{position:fixed;top:var(--topbar-h);left:0;right:0;z-index:99;background:rgba(250,249,247,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.legend-inner{max-width:1240px;margin:0 auto;padding:7px 24px;display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none}
-.legend-inner::-webkit-scrollbar{display:none}
-.legend-title{font-size:12px;color:var(--ink2);white-space:nowrap;margin-right:4px}
-.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:12px;white-space:nowrap;border:1px solid transparent;cursor:pointer;transition:box-shadow .15s,transform .15s var(--ease);user-select:none}
-.chip .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.legend-inner{max-width:1240px;margin:0 auto;padding:6px 24px;display:flex;flex-direction:column;gap:2px}
+.legend-row{display:flex;align-items:center;gap:5px;overflow-x:auto;scrollbar-width:none;padding:1px 0}
+.legend-row::-webkit-scrollbar{display:none}
+.legend-group{flex:0 0 auto;width:32px;font-size:11px;color:#b0b6c0;letter-spacing:.5px;user-select:none}
+.legend-hint{flex:0 0 auto;font-size:11px;color:#b6bcc7;margin-left:8px;white-space:nowrap;user-select:none}
+/* 窗口不够宽时先收掉说明文字，把宽度让给 chip（chip 本身各带 title 提示） */
+@media(max-width:1150px){ .legend-hint{display:none} }
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11.5px;line-height:1.5;white-space:nowrap;border:1px solid transparent;cursor:pointer;transition:box-shadow .15s,transform .15s var(--ease);user-select:none;flex:0 0 auto}
+.chip .dot{width:7px;height:7px;border-radius:50%;flex:none}
 .chip:hover{transform:translateY(-1px)}
 .chip.active{box-shadow:inset 0 0 0 1.5px currentColor}
-.legend-sep{width:1px;height:16px;background:var(--line);flex:none;margin:0 4px}
 /* 从句图例里的小线样：直接复用正文那套 background-image，所见即所得 */
-.line-sample{display:inline-block;width:16px;height:6px;flex:none;vertical-align:middle;
-  background-repeat:repeat-x;background-position:0 100%;--ly:100%}
+.line-sample{display:inline-block;width:15px;height:5px;flex:none;vertical-align:middle;background-repeat:repeat-x;background-position:0 100%}
 
 /* ---------- 主布局 ---------- */
-.layout{max-width:1240px;margin:0 auto;padding:128px 24px 80px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:36px;align-items:start}
-@media(max-width:960px){.layout{grid-template-columns:1fr;padding-top:124px}}
+.layout{max-width:1240px;margin:0 auto;padding:142px 24px 80px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:36px;align-items:start}
+@media(max-width:960px){.layout{grid-template-columns:1fr;padding-top:138px}}
 
 /* ---------- 输入面板 ---------- */
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
@@ -145,8 +149,15 @@ body.hide-trans .trans{display:none}
 
 /* ---------- 逐词标注 ---------- */
 .annotated{font-family:Georgia,"Times New Roman",serif;font-size:17px;line-height:2.45;color:var(--ink)}
+/* 有从句的句子要同时放下「文字下方的 3 层线」和「文字上方的释义气泡」，行高必须给够。
+   3.7 是让最深的线（文字下方约 17px）既不撞下一行的字、也不撞上一行的释义气泡的值；
+   调小到 3.5 以下时，上一行的最深线就会顶到这行的中文释义。 */
+.annotated.has-clauses{line-height:3.7}
 .seg-wrap{padding:3px 1px;border-radius:6px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
-.unit{display:inline-flex;flex-direction:column;justify-content:flex-start;vertical-align:bottom;position:relative;margin:0 .5px;border-radius:5px;transition:opacity .2s var(--ease)}
+/* vertical-align 必须是 baseline：用 bottom 会把 .clause-wrap 的盒子顶到文字上方
+   （实测盒底比文字底高 14px），那样 padding-bottom 加多少线都还压在字上。
+   baseline 之后盒底≈文字底，padding-bottom 才等于「线往下挪多少」。 */
+.unit{display:inline-flex;flex-direction:column;justify-content:flex-start;vertical-align:baseline;position:relative;margin:0 .5px;border-radius:5px;transition:opacity .2s var(--ease)}
 .unit.dim{opacity:.2}
 .unit .w{padding:0 4px;border-radius:5px;transition:filter .14s,box-shadow .14s;line-height:1.6;font-synthesis:none}
 .unit.clickable{cursor:pointer}
@@ -168,10 +179,15 @@ body.pref-no-anim .unit .w,
 body.pref-no-anim .unit .gloss{transition:none!important}
 .unit.has-gloss .w{border-bottom:1.5px dashed #c9c4ba}
 .unit .gloss{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:11px;line-height:1.25;color:#8a919e;white-space:nowrap;text-align:center;padding:0 2px;user-select:none;pointer-events:none;position:absolute;top:calc(100% + 2px);left:50%;transform:translateX(-50%);z-index:5;transition:opacity .16s}
+/* 有从句时，文字下方整条带子归从句线，释义气泡改到文字上方（类似注音），两边互不干扰。
+   否则中文释义会被线横穿，非常难看。 */
+.annotated.has-clauses .gloss{top:auto;bottom:calc(100% + 1px)}
 body.no-gloss .unit .gloss{display:none}
 body.no-gloss .unit.has-gloss .w{border-bottom-color:transparent}
-body.mode-hover .annotated{line-height:2.0}
 body.mode-hover .unit .gloss{display:block;opacity:0;visibility:hidden;top:100%;background:#22293a;color:#fff;padding:3px 8px;border-radius:5px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:opacity .16s,visibility .16s}
+/* 悬停模式的深色气泡同样留在上方；这里必须显式覆盖，否则 top 被上面的规则改回 100%、
+   而 bottom 还留着，气泡会被上下拉伸。 */
+body.mode-hover .annotated.has-clauses .unit .gloss{top:auto;bottom:calc(100% + 4px)}
 body.mode-hover .unit:hover .gloss{opacity:1;visibility:visible}
 /* 「悬停显示」原来只对逐词释义生效，却挂在「翻译显示模式」的标题下 —— 这里把译文也纳入，
    让按钮标签与实际行为一致（否则选「悬停显示」后译文依然常显）。 */
@@ -183,30 +199,32 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
    为什么不用 text-decoration：Chrome 不把装饰传播进 display:inline-flex 的 .unit
    （规范明确「不传播到 atomic inline-level 后代的内容」），实测波浪线/双线/点线全部不显示，
    只在单词之间的空格上留下碎片。所以统一用 background-image 在包裹层上画线，
-   这样线是连续的、能跨单词间隙、换行时每行都有，也能和 .seg-wrap 的黄底共存。 */
+   这样线是连续的、能跨单词间隙、换行时每行都有，也能和 .seg-wrap 的黄底共存。
+
+   ⚠ 线只能往下堆，不能往上：.clause-wrap 的盒子底边和文字底边对齐（见 .unit 的
+   vertical-align:baseline），padding-bottom 加多少，线就落在文字下方多少。 */
 .clause-wrap{
   box-decoration-break:clone;-webkit-box-decoration-break:clone;
-  background-repeat:repeat-x;background-position:0 var(--ly);
-  padding-bottom:6px;                       /* 线画在 padding 区，落在文字下方，不压字 */
-  --ly:100%;                                /* 线的垂直位置；嵌套层级用 .cd2/.cd3 上移 */
+  background-repeat:repeat-x;background-position:0 100%;
+  padding-bottom:3px;                       /* 第 1 层：线落在文字下方约 2px */
 }
-.cd2{--ly:calc(100% - 4px)}
-.cd3{--ly:calc(100% - 8px)}
+.cd2{padding-bottom:9px}                    /* 第 2 层 */
+.cd3{padding-bottom:15px}                   /* 第 3 层及更深 */
 /* 宾语从句：单实线 */
 .cl-obj{background-image:linear-gradient(#2563eb,#2563eb);background-size:100% 2px}
 /* 定语从句：波浪线 */
-.cl-attr{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='5'><path d='M0 4 Q 3.5 0.5 7 4 T 14 4' fill='none' stroke='%237c3aed' stroke-width='1.4' stroke-linecap='round'/></svg>");background-size:14px 5px}
+.cl-attr{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='5'><path d='M0 4 Q 3.5 0.5 7 4 T 14 4' fill='none' stroke='%237c3aed' stroke-width='1.4' stroke-linecap='round'/></svg>");background-size:9px 2.5px}
 /* 状语从句：点线 */
-.cl-adv{background-image:radial-gradient(circle,#b45309 0 1.3px,transparent 1.6px);background-size:6px 2.5px;background-position:1px var(--ly)}
+.cl-adv{background-image:radial-gradient(circle,#b45309 0 1.1px,transparent 1.4px);background-size:5px 2px;background-position:1px 100%}
 /* 主语从句：双横线 */
-.cl-subj{background-image:linear-gradient(#15803d,#15803d),linear-gradient(#15803d,#15803d);background-size:100% 1.5px,100% 1.5px;background-position:0 calc(var(--ly) - 3.5px),0 var(--ly)}
+.cl-subj{background-image:linear-gradient(#15803d,#15803d),linear-gradient(#15803d,#15803d);background-size:100% 1.2px,100% 1.2px;background-position:0 calc(100% - 2px),0 100%}
 /* 表语从句：虚线 */
-.cl-pred{background-image:repeating-linear-gradient(90deg,#0e7490 0 6px,transparent 6px 11px);background-size:auto 2px}
+.cl-pred{background-image:repeating-linear-gradient(90deg,#0e7490 0 5px,transparent 5px 9px);background-size:auto 1.5px}
 /* 同位语从句：点划线（比状语的点线更粗 + 不同颜色，实测可辨） */
-.cl-appos{background-image:repeating-linear-gradient(90deg,#be185d 0 4px,transparent 4px 7px,#be185d 7px 8px,transparent 8px 12px);background-size:auto 2px}
+.cl-appos{background-image:repeating-linear-gradient(90deg,#be185d 0 4px,transparent 4px 7px,#be185d 7px 8px,transparent 8px 12px);background-size:auto 1.5px}
 
 /* ---------- 侧栏词表 ---------- */
-.sidebar{position:sticky;top:128px}
+.sidebar{position:sticky;top:142px}
 .side-card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
 .side-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:8px}
 .side-head h3{font-size:15px;font-weight:700}
@@ -322,7 +340,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   :root{--topbar-h:52px}
   .topbar-inner{padding:0 14px;gap:8px}
   .legend-inner{padding:6px 14px}
-  .layout{padding:120px 14px 60px;gap:24px}
+  .layout{padding:136px 14px 60px;gap:24px}
   .article{padding:20px 18px}
   .prose{font-size:16px;line-height:1.85}
   .annotated{font-size:16px;line-height:2.3}
@@ -336,7 +354,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   .logo{font-size:14px}
   .logo small{display:none}
 
-  .layout{padding:110px 10px 56px}
+  .layout{padding:136px 10px 56px}
   .article{padding:16px 12px;border-radius:12px}
   .article-head{margin:24px 0 6px}
   .article-head h2{font-size:17px}
@@ -354,8 +372,9 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   .img-item{width:78px;height:78px}
   .modal{padding:20px;border-radius:14px;max-height:88dvh}
   .modal-foot .btn{padding:10px 16px}
-  .legend-title{display:none}
-  .chip{padding:4px 10px}
+  /* 手机上组标签收窄、chip 收紧，尽量让一行放得下 */
+  .legend-group{width:auto;margin-right:2px}
+  .chip{padding:2px 7px;font-size:11px}
   .footer-note{padding:0 14px 28px}
   .script-context{display:none}
 
@@ -401,6 +420,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   .p-sent.has-detail .p-detail{display:block!important;border:none;background:none;padding:6px 0}
   .sent-error button{display:none!important}      /* 打印出来点不动的「重试」没有意义 */
   .annotated{line-height:2.45!important}
+  .annotated.has-clauses{line-height:3.7!important}   /* 打印时同样要给线留出行高 */
   .unit{opacity:1!important}
   .unit .gloss{display:block!important;background:none!important;color:#666!important;box-shadow:none!important;opacity:1!important;visibility:visible!important}
   /* 「悬停显示」模式下译文是 visibility:hidden，打印时必须强制显示 */
@@ -463,7 +483,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
 </header>
 
 <div class="legend" id="legendBar">
-  <div class="legend-inner" id="legendInner"><span class="legend-title">图例：加粗黄底=主干 · 彩色字=修饰 · 色块=从句（点击可筛选）</span></div>
+  <div class="legend-inner" id="legendInner"></div>
 </div>
 
 <main class="layout">
@@ -798,13 +818,14 @@ async function copyText(text){
 
 /* ============================================================
    图例（两组：成分 / 从句，点击筛选高亮；同一时刻只生效一个筛选）
+   排成两行、各带一个组标签，15 个 chip 才不会挤成一条被截断的长龙。
    ============================================================ */
 let filterType = null;      // 角色层筛选
 let filterClause = null;    // 从句层筛选
 
 function roleChipsHTML(){
   return Object.entries(ROLES).filter(([k]) => k !== 'other').map(([k,t]) =>
-    `<span class="chip" data-type="${k}" style="background:${hexTint(t.color,.1)};border-color:${hexTint(t.color,.25)};color:${t.color}"><span class="dot" style="background:${t.color}"></span>${t.label}</span>`
+    `<span class="chip" data-type="${k}" title="${escA(t.label)}" style="background:${hexTint(t.color,.1)};border-color:${hexTint(t.color,.25)};color:${t.color}"><span class="dot" style="background:${t.color}"></span>${t.label}</span>`
   ).join('');
 }
 /* 从句 chip：左侧小样用与正文完全相同的 background-image 画一小段线，所见即所得 */
@@ -816,10 +837,10 @@ function clauseChipsHTML(){
 function renderLegend(){
   const bar = $('#legendInner');
   bar.innerHTML =
-    '<span class="legend-title">图例：黄底=主句主干 · 彩色字=成分（越深越靠外层）· 线型=从句（点击筛选）</span>' +
-    roleChipsHTML() +
-    '<span class="legend-sep" aria-hidden="true"></span>' +
-    clauseChipsHTML();
+    '<div class="legend-row"><span class="legend-group">成分</span>' + roleChipsHTML() +
+      '<span class="legend-hint">黄底=主句主干 · 字色越淡=越靠从句里层</span></div>' +
+    '<div class="legend-row"><span class="legend-group">从句</span>' + clauseChipsHTML() +
+      '<span class="legend-hint">线型区分，嵌套时内外线上下并排</span></div>';
   bar.querySelectorAll('.chip').forEach(c => {
     c.onclick = () => {
       if(c.dataset.clause){
@@ -2293,8 +2314,9 @@ function buildDetailHTML(s, withTitle = false){
   }
 
   /* 组装：从句包装按包含关系嵌套；黄底只在主句主干上出现，
-     所以「底色块」与「从句包装」天然互斥、不会交叉嵌套。 */
-  let html = '<div class="annotated">';
+     所以「底色块」与「从句包装」天然互斥、不会交叉嵌套。
+     有从句时给容器加 has-clauses：行高要加大，并让释义气泡让出下方的线带。 */
+  let html = '<div class="annotated' + (clauses.length ? ' has-clauses' : '') + '">';
   let openBg = null;
   let stack = [];                                   // 当前打开的从句 id（由外到内）
   const closeBg = () => { if(openBg){ html += '</span>'; openBg = null; } };
