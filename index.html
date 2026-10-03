@@ -48,7 +48,9 @@ body.font-sans .annotated{font-family:-apple-system,BlinkMacSystemFont,"PingFang
 .seg-toggle button{padding:7px 10px;font-size:12.5px;color:var(--ink2);transition:background .16s,color .16s;white-space:nowrap}
 .seg-toggle button.on{background:var(--ink);color:#fff}
 @media(max-width:1160px){ .logo small{display:none} }
-@media(max-width:1080px){ #fontBtn{display:none} }
+/* 注意：#fontBtn 不能在 1080px 处隐藏 —— 「更多」菜单只在 ≤900px 才出现，
+   否则 901~1080px 这一段字体切换会变得完全不可达。
+   字体按钮统一跟其它次要图标一起，到 ≤900px 才收进「更多」。 */
 
 /* ---------- 图例栏 ---------- */
 .legend{position:fixed;top:var(--topbar-h);left:0;right:0;z-index:99;background:rgba(250,249,247,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
@@ -59,6 +61,10 @@ body.font-sans .annotated{font-family:-apple-system,BlinkMacSystemFont,"PingFang
 .chip .dot{width:8px;height:8px;border-radius:50%;flex:none}
 .chip:hover{transform:translateY(-1px)}
 .chip.active{box-shadow:inset 0 0 0 1.5px currentColor}
+.legend-sep{width:1px;height:16px;background:var(--line);flex:none;margin:0 4px}
+/* 从句图例里的小线样：直接复用正文那套 background-image，所见即所得 */
+.line-sample{display:inline-block;width:16px;height:6px;flex:none;vertical-align:middle;
+  background-repeat:repeat-x;background-position:0 100%;--ly:100%}
 
 /* ---------- 主布局 ---------- */
 .layout{max-width:1240px;margin:0 auto;padding:128px 24px 80px;display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:36px;align-items:start}
@@ -109,9 +115,13 @@ body.font-sans .annotated{font-family:-apple-system,BlinkMacSystemFont,"PingFang
 .prose{font-family:Georgia,"Times New Roman",serif;font-size:16.5px;line-height:1.9;color:var(--ink);text-align:justify}
 .p-sent{cursor:pointer;border-radius:4px;transition:background .14s}
 .p-sent:hover>.p-text{background:#f3efe6}
-.p-sent.open>.p-text,.p-sent.open>.p-num{display:none}
-.p-num{font-family:-apple-system,"PingFang SC",sans-serif;font-size:10px;color:#b6bcc7;vertical-align:super;margin-right:2px;user-select:none;transition:color .14s}
-.p-sent:hover .p-num{color:var(--accent)}
+/* 展开后只藏原句文字；序号保留下来当「收起」开关（否则整句没有任何可点的地方） */
+.p-sent.open>.p-text{display:none}
+.p-num{font-family:-apple-system,"PingFang SC",sans-serif;font-size:10px;color:#b6bcc7;vertical-align:super;margin-right:2px;user-select:none;transition:color .14s,background .14s;padding:1px 4px;border-radius:5px;cursor:pointer}
+.p-num::after{content:'▸';font-size:8px;margin-left:1px;opacity:.8}
+.p-sent.open .p-num::after{content:'▾'}
+.p-sent:hover .p-num,.p-num:hover{color:var(--accent)}
+.p-num:hover{background:#f3efe6}
 .p-detail{display:none;margin:12px 0 16px;padding:16px 18px;background:#fbfaf7;border:1px solid var(--line);border-radius:12px;cursor:default}
 /* 只有 .open 才展开详情；.has-detail 仅用于打印（详见 @media print），
    否则折叠后详情仍然显示 —— 这就是"折叠不起来"的原因 */
@@ -163,6 +173,37 @@ body.no-gloss .unit.has-gloss .w{border-bottom-color:transparent}
 body.mode-hover .annotated{line-height:2.0}
 body.mode-hover .unit .gloss{display:block;opacity:0;visibility:hidden;top:100%;background:#22293a;color:#fff;padding:3px 8px;border-radius:5px;font-size:12px;box-shadow:0 4px 12px rgba(0,0,0,.2);transition:opacity .16s,visibility .16s}
 body.mode-hover .unit:hover .gloss{opacity:1;visibility:visible}
+/* 「悬停显示」原来只对逐词释义生效，却挂在「翻译显示模式」的标题下 —— 这里把译文也纳入，
+   让按钮标签与实际行为一致（否则选「悬停显示」后译文依然常显）。 */
+body.mode-hover .trans{opacity:0;visibility:hidden;transition:opacity .16s,visibility .16s}
+body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
+
+/* ---------- 从句线型（与成分层正交的第二层） ----------
+   线型 = 从句类型；文字颜色的深浅 = 从句嵌套层级（见 DEPTH_ALPHA）。
+   为什么不用 text-decoration：Chrome 不把装饰传播进 display:inline-flex 的 .unit
+   （规范明确「不传播到 atomic inline-level 后代的内容」），实测波浪线/双线/点线全部不显示，
+   只在单词之间的空格上留下碎片。所以统一用 background-image 在包裹层上画线，
+   这样线是连续的、能跨单词间隙、换行时每行都有，也能和 .seg-wrap 的黄底共存。 */
+.clause-wrap{
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;
+  background-repeat:repeat-x;background-position:0 var(--ly);
+  padding-bottom:6px;                       /* 线画在 padding 区，落在文字下方，不压字 */
+  --ly:100%;                                /* 线的垂直位置；嵌套层级用 .cd2/.cd3 上移 */
+}
+.cd2{--ly:calc(100% - 4px)}
+.cd3{--ly:calc(100% - 8px)}
+/* 宾语从句：单实线 */
+.cl-obj{background-image:linear-gradient(#2563eb,#2563eb);background-size:100% 2px}
+/* 定语从句：波浪线 */
+.cl-attr{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='5'><path d='M0 4 Q 3.5 0.5 7 4 T 14 4' fill='none' stroke='%237c3aed' stroke-width='1.4' stroke-linecap='round'/></svg>");background-size:14px 5px}
+/* 状语从句：点线 */
+.cl-adv{background-image:radial-gradient(circle,#b45309 0 1.3px,transparent 1.6px);background-size:6px 2.5px;background-position:1px var(--ly)}
+/* 主语从句：双横线 */
+.cl-subj{background-image:linear-gradient(#15803d,#15803d),linear-gradient(#15803d,#15803d);background-size:100% 1.5px,100% 1.5px;background-position:0 calc(var(--ly) - 3.5px),0 var(--ly)}
+/* 表语从句：虚线 */
+.cl-pred{background-image:repeating-linear-gradient(90deg,#0e7490 0 6px,transparent 6px 11px);background-size:auto 2px}
+/* 同位语从句：点划线（比状语的点线更粗 + 不同颜色，实测可辨） */
+.cl-appos{background-image:repeating-linear-gradient(90deg,#be185d 0 4px,transparent 4px 7px,#be185d 7px 8px,transparent 8px 12px);background-size:auto 2px}
 
 /* ---------- 侧栏词表 ---------- */
 .sidebar{position:sticky;top:128px}
@@ -257,8 +298,8 @@ body.mode-hover .unit:hover .gloss{opacity:1;visibility:visible}
    要点：顶栏改成"常用几个 + 更多菜单"，侧栏收成底部抽屉，
         字号与留白按屏宽递减，触屏补上"长按查词"。
    ============================================================ */
-/* 更多菜单（默认隐藏，仅窄屏显示） */
-.more-wrap{position:relative;flex:0 0 auto}
+/* 更多菜单（默认隐藏，仅窄屏显示；宽屏由下面的媒体查询保持隐藏） */
+.more-wrap{position:relative;flex:0 0 auto;display:none}
 .more-menu{display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:120;min-width:168px;
   background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;animation:fadeIn .14s var(--ease)}
 .more-menu.show{display:block}
@@ -351,12 +392,21 @@ body.mode-hover .unit:hover .gloss{opacity:1;visibility:visible}
   .layout{display:block;padding:0;max-width:none}
   .article{box-shadow:none;border:none;padding:0}
   .p-sent{break-inside:avoid}
-  .p-sent.open>.p-text,.p-sent.open>.p-num,
-  .p-sent.has-detail>.p-text,.p-sent.has-detail>.p-num{display:none!important}
+  /* 只有「真正有精析」的句子才藏原句：分析失败的句子没有 has-detail，
+     必须保留原文，否则打印出来只剩一个没有上下文的错误框。
+     注意还要显式覆盖屏幕端那条 `.p-sent.open>.p-text{display:none}` ——
+     fillSentenceError 会给失败句加 .open，光靠「不写规则」是盖不住的。 */
+  .p-sent.has-detail>.p-text{display:none!important}
+  .p-sent.open:not(.has-detail)>.p-text{display:inline!important}
   .p-sent.has-detail .p-detail{display:block!important;border:none;background:none;padding:6px 0}
+  .sent-error button{display:none!important}      /* 打印出来点不动的「重试」没有意义 */
   .annotated{line-height:2.45!important}
   .unit{opacity:1!important}
   .unit .gloss{display:block!important;background:none!important;color:#666!important;box-shadow:none!important;opacity:1!important;visibility:visible!important}
+  /* 「悬停显示」模式下译文是 visibility:hidden，打印时必须强制显示 */
+  body.mode-hover .trans{opacity:1!important;visibility:visible!important}
+  /* 黄底主干与从句线都是 background 画的，Chrome 默认不打印背景 —— 不显式声明就会全丢 */
+  .seg-wrap,.clause-wrap{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sidebar{position:static;margin-top:30px}
   .side-cols{max-height:none;overflow:visible}
   .side-card{box-shadow:none}
@@ -575,10 +625,13 @@ const MODEL   = 'deepseek-flash';       // 官方模型名（旧名 deepseek-v4-
 const MODEL_LABEL = 'DeepSeek V4.1 Flash';
 const BATCH_SIZE = 5;                   // 每批句子数
 const CONCURRENCY = 3;                  // 并发批次数
-const MAX_TOKENS = 8192;                // 单次请求最大输出（非思考模式默认上限即 8K）
+const MAX_TOKENS = 16384;               // 单次请求最大输出（deepseek-flash 上限远高于此；8192 会截断 5 句的长批）
 const REQ_TIMEOUT = 180000;             // 单次请求超时（毫秒）
-const CACHE_PRE = 'ds_ana_v5_';         // 缓存前缀（版本变更后旧缓存自动失效）
+const CACHE_PRE = 'ds_ana_v6_';         // 缓存前缀（版本变更后旧缓存自动失效；v6：两层结构）
 const WORD_CACHE_PRE = 'ds_word_v3_';   // 解词缓存（v3：缓存键已带上提示词指纹）
+/* 任意版本的缓存键：统计与「清空全部缓存」必须覆盖旧版本，否则升版后旧数据永远统计不到也清不掉 */
+const CACHE_KEY_RE = /^ds_(?:ana|word)_v\d+_/;
+const CACHE_CUR_PRE = [CACHE_PRE, WORD_CACHE_PRE];
 const INDEX_KEY = 'ds_cache_index';     // 统一缓存索引（分析 + 解词）：{k: 键, t: 最后访问时间}
 const MAX_CACHE_ENTRIES = 40;           // 索引最多保留的缓存条目数
 const CACHE_TTL_DAYS = 7;               // 底线：超过这个天数没被访问过的缓存直接清除
@@ -609,20 +662,41 @@ const WORD_PROMPT_DEFAULT = {
   extra: ''
 };
 
-/* 视觉分层：主干成分（主谓宾表）= 加粗彩色文字 + 统一淡黄色高亮（句子骨架）；
-   修饰成分（定状补）= 彩色文字；从句/同位语/插入语 = 明显底色块 */
-const TYPES = {
-  subject:    {label:'主语',     color:'#1d4ed8', bold:true, bg:'#f7e6a4'},
-  predicate:  {label:'谓语',     color:'#dc2626', bold:true, bg:'#f7e6a4'},
-  object:     {label:'宾语',     color:'#15803d', bold:true, bg:'#f7e6a4'},
-  predicative:{label:'表语',     color:'#ea580c', bold:true, bg:'#f7e6a4'},
+/* ============================================================
+   两层类型表（正交）
+   角色层 ROLES  ：句子成分。彩色文字；只有主句主干额外带黄底（backbone）。
+   从句层 CLAUSES：从句类型。只画线型（见 .cl-* 规则），一律不带底色；
+                   嵌套层级由文字颜色的深浅体现（见 DEPTH_ALPHA）。
+   ============================================================ */
+const ROLES = {
+  subject:    {label:'主语',     color:'#1d4ed8', bold:true, backbone:true},
+  predicate:  {label:'谓语',     color:'#dc2626', bold:true, backbone:true},
+  object:     {label:'宾语',     color:'#15803d', bold:true, backbone:true},
+  predicative:{label:'表语',     color:'#ea580c', bold:true, backbone:true},
   attributive:{label:'定语',     color:'#7c3aed'},
   adverbial:  {label:'状语',     color:'#b45309'},
   complement: {label:'补足语',   color:'#0e7490'},
-  attr_clause:{label:'定语从句', color:'#a21caf', bg:'#f9e8ff'},
-  appositive: {label:'同位语',   color:'#4338ca', bg:'#e6e9fb'},
-  parenthesis:{label:'插入语',   color:'#6b7280', bg:'#f1f2f4', italic:true},
+  appositive: {label:'同位语',   color:'#4338ca'},
+  parenthesis:{label:'插入语',   color:'#6b7280', italic:true},
   other:      {label:'其他',     color:'#9aa0ab'}
+};
+const BACKBONE_BG = '#f7e6a4';            // 主句主干底色（只有 depth 0 用）
+
+const CLAUSES = {
+  subj_clause: {label:'主语从句',  color:'#15803d', cls:'cl-subj'},
+  obj_clause:  {label:'宾语从句',  color:'#2563eb', cls:'cl-obj'},
+  pred_clause: {label:'表语从句',  color:'#0e7490', cls:'cl-pred'},
+  attr_clause: {label:'定语从句',  color:'#7c3aed', cls:'cl-attr'},
+  adv_clause:  {label:'状语从句',  color:'#b45309', cls:'cl-adv'},
+  appos_clause:{label:'同位语从句',color:'#be185d', cls:'cl-appos'}
+};
+/* 从句深度 → 文字颜色的不透明度：主句最深，越往里越淡（配合顶层线位 .cd1/.cd2/.cd3） */
+const DEPTH_ALPHA = [1, .62, .45, .34];
+const clampDepth = d => Math.max(0, Math.min(DEPTH_ALPHA.length - 1, d | 0));
+/* 旧数据兼容：若模型仍把从句类型写进 segments，按此表折成角色 + 补造一条从句跨度 */
+const LEGACY_CLAUSE_ROLE = {
+  subj_clause:'subject', obj_clause:'object', pred_clause:'predicative',
+  attr_clause:'attributive', adv_clause:'adverbial', appos_clause:'appositive'
 };
 
 const SAMPLE = `The idea that some groups of people may be more intelligent than others is one of those hypotheses that dare not speak its name. But Gregory Cochran is prepared to say it anyway. He is that rare bird, a scientist who works independently of any institution.
@@ -633,7 +707,10 @@ He helped popularize the idea that some diseases not previously thought to have 
    状态
    ============================================================ */
 const state = {
-  apiKey: localStorage.getItem('ds_api_key') || '',
+  /* 这是全文件唯一一处顶层 localStorage 读取：某些环境（Safari/无痕/被策略禁用的
+     第三方 iframe）直接抛 SecurityError，一旦抛出本脚本块就中断，而 $/esc 等 const
+     在其后声明，会导致后面所有脚本块连锁 TDZ 崩溃、整个页面变成死页面。必须包起来。 */
+  apiKey: (() => { try{ return localStorage.getItem('ds_api_key') || ''; }catch(_){ return ''; } })(),
   images: [],            // {dataUrl}
   sentences: [],         // [{text, data|null, status, para, error}]
   paragraphs: [],        // [[句索引...], ...]
@@ -691,6 +768,14 @@ function hideProgress(){
   $('#progressWrap').classList.remove('show');
   $('#progressBar').classList.remove('busy');
 }
+/* 进度条自动隐藏单独用一个定时器：以前和 later() 共用 progressTimer，
+   结果分析结束后只要在 2 秒内点开 API Key / 提示词弹窗（或「全部展开」跑完），
+   待执行的 hideProgress 就被 later() 覆盖掉，进度条永远挂在页面上。 */
+let progressHideTimer = null;
+function hideProgressLater(ms){
+  clearTimeout(progressHideTimer);
+  progressHideTimer = setTimeout(hideProgress, ms);
+}
 function later(fn, ms){ clearTimeout(progressTimer); progressTimer = setTimeout(fn, ms); }
 
 let toastTimer = null;
@@ -712,33 +797,55 @@ async function copyText(text){
 }
 
 /* ============================================================
-   图例（点击筛选高亮）
+   图例（两组：成分 / 从句，点击筛选高亮；同一时刻只生效一个筛选）
    ============================================================ */
-let filterType = null;
-function legendChipsHTML(clickable = true){
-  return Object.entries(TYPES).filter(([k]) => k !== 'other').map(([k,t]) =>
-    `<span class="chip"${clickable ? ` data-type="${k}"` : ''} style="background:${hexTint(t.color,.1)};border-color:${hexTint(t.color,.25)};color:${t.color}"><span class="dot" style="background:${t.color}"></span>${t.label}</span>`
+let filterType = null;      // 角色层筛选
+let filterClause = null;    // 从句层筛选
+
+function roleChipsHTML(){
+  return Object.entries(ROLES).filter(([k]) => k !== 'other').map(([k,t]) =>
+    `<span class="chip" data-type="${k}" style="background:${hexTint(t.color,.1)};border-color:${hexTint(t.color,.25)};color:${t.color}"><span class="dot" style="background:${t.color}"></span>${t.label}</span>`
+  ).join('');
+}
+/* 从句 chip：左侧小样用与正文完全相同的 background-image 画一小段线，所见即所得 */
+function clauseChipsHTML(){
+  return Object.entries(CLAUSES).map(([k,t]) =>
+    `<span class="chip" data-clause="${k}" title="${escA(t.label)}" style="background:${hexTint(t.color,.1)};border-color:${hexTint(t.color,.25)};color:${t.color}"><i class="line-sample ${t.cls}"></i>${t.label}</span>`
   ).join('');
 }
 function renderLegend(){
   const bar = $('#legendInner');
-  bar.innerHTML = '<span class="legend-title">图例：加粗黄底=主干 · 彩色字=修饰 · 色块=从句（点击可筛选）</span>' + legendChipsHTML();
+  bar.innerHTML =
+    '<span class="legend-title">图例：黄底=主句主干 · 彩色字=成分（越深越靠外层）· 线型=从句（点击筛选）</span>' +
+    roleChipsHTML() +
+    '<span class="legend-sep" aria-hidden="true"></span>' +
+    clauseChipsHTML();
   bar.querySelectorAll('.chip').forEach(c => {
     c.onclick = () => {
-      filterType = (filterType === c.dataset.type) ? null : c.dataset.type;
+      if(c.dataset.clause){
+        filterClause = (filterClause === c.dataset.clause) ? null : c.dataset.clause;
+        filterType = null;
+      }else{
+        filterType = (filterType === c.dataset.type) ? null : c.dataset.type;
+        filterClause = null;
+      }
       applyFilter();
     };
   });
 }
+/* 每次重建标注（懒加载/重试）后都要重新套用当前筛选，否则新生成的 unit 不会变暗 */
 function applyFilter(){
-  const q = filterType ? `.unit[data-type="${escA(filterType)}"]` : '';
+  const on = !!(filterType || filterClause);
   $$('#article .unit').forEach(u => {
-    u.classList.toggle('dim', !!filterType && u.dataset.type !== filterType);
+    const hit = filterType ? u.dataset.type === filterType
+                           : (filterClause ? u.dataset.clause === filterClause : true);
+    u.classList.toggle('dim', on && !hit);
   });
   $$('#legendInner .chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.type === filterType);
+    c.classList.toggle('active',
+      (!!c.dataset.type && c.dataset.type === filterType) ||
+      (!!c.dataset.clause && c.dataset.clause === filterClause));
   });
-  if(q){ /* 选中筛选时给命中的成分一个轻微提示（仅视觉） */ }
 }
 
 /* ============================================================
@@ -946,6 +1053,9 @@ $('#ocrBtn').onclick = async () => {
   setStatus('正在识别图片文字…', 'busy');
   setProgress(0, 1, `正在转录 ${state.images.length} 张图片，请稍候…`);
   try{
+    /* 文本框里已有内容时先确认，避免 OCR 直接覆盖掉用户刚粘贴的文章 */
+    const existing = $('#articleInput').value.trim();
+    if(existing && !confirm('文本框里已经有内容了，识别结果会覆盖它。确定继续吗？')) return;
     const content = [{type:'text', text:'请逐字转录图片中的英文文章正文。要求：1) 只输出英文原文文本，保留原有拼写、大小写和标点；2) 段落之间用一个空行分隔；3) 不要输出任何解释、注释、翻译或 markdown 标记；4) 若有多张图片，按图片顺序依次转录并拼接。'}];
     state.images.forEach(im => content.push({type:'image_url', image_url:{url:im.dataUrl}}));
     const text = (await callAPI([{role:'user', content}], {json:false})).trim();
@@ -955,7 +1065,9 @@ $('#ocrBtn').onclick = async () => {
     const words = text.split(/\s+/).filter(Boolean).length;
     setStatus(`识别完成，已填入文本框（约 ${words} 词），请校对后开始分析`, 'ok');
   }catch(err){
-    setStatus('识别失败：' + err.message, 'err');
+    /* 这里的截断是「转录输出太长」，跟「一批句子太多」不是一回事，别复用那句话 */
+    const m = String(err && err.message || err);
+    setStatus('识别失败：' + (/截断/.test(m) ? '图片内容太多，转录被截断，请分几次识别' : m), 'err');
   }finally{
     btn.disabled = false; btn.textContent = oldLabel;
     hideProgress();
@@ -992,7 +1104,8 @@ async function callAPI(messages, {json = true, maxTokens = MAX_TOKENS} = {}){
     if(e && e.name === 'AbortError') throw new Error(`请求超时（超过 ${REQ_TIMEOUT/1000} 秒未响应），请重试`);
     throw new Error('网络请求失败（可能是网络问题或浏览器跨域限制）：' + (e && e.message ? e.message : e));
   }
-  clearTimeout(timer);
+  /* 这里故意不 clearTimeout(timer)：定时器要一直管到正文读完，
+     否则响应头一到就取消超时，正文卡住就永远挂在那里。 */
 
   if(!res.ok){
     let msg = 'HTTP ' + res.status;
@@ -1004,7 +1117,18 @@ async function callAPI(messages, {json = true, maxTokens = MAX_TOKENS} = {}){
     throw new Error(msg);
   }
 
-  const j = await res.json();
+  /* 定时器要一直管到读完 body：上面 clearTimeout 在「响应头到达」时就执行了，
+     正文若卡住就没有任何超时兜底。另外 200 + 非 JSON 正文（网关/门户页）
+     会抛出裸 SyntaxError，这里统一包成人能看懂的错误。 */
+  let j;
+  try{
+    j = await res.json();
+  }catch(e){
+    if(e && e.name === 'AbortError') throw new Error(`请求超时（超过 ${REQ_TIMEOUT/1000} 秒未响应），请重试`);
+    throw new Error('服务端返回的不是合法 JSON（可能是网关或代理拦截），请稍后重试');
+  }finally{
+    clearTimeout(timer);
+  }
   const choice = j.choices?.[0];
   if(choice && choice.finish_reason === 'length') throw new Error('输出被 max_tokens 截断，本批句子过多，请重试');
   const content = choice?.message?.content ?? '';
@@ -1030,12 +1154,27 @@ function parseJSON(text){
 /* ============================================================
    AI 断句（段落严格按用户粘贴的排版）
    ============================================================ */
-/* 按用户粘贴的排版切分段落：优先按空行；全文没有空行则按单个换行 */
+/* 按用户粘贴的排版切分段落：优先按空行；全文没有空行时要知道那些换行到底是什么。
+   原来的实现是「没有空行 → 每个换行都当段落」，于是从 PDF 复制来的硬换行文本
+   会被切成一小行一段：AI 拿到的段落数虚高、断句被锁死在行内，
+   而 normalizeSplit 的「段数必须相等」校验又必然失败，只能回退到同样碎的本地断句。
+   这里加一个判据：行尾多为句末标点 → 本来就一行一段；否则视为排版硬换行，接起来当一段。 */
 function localParagraphs(text){
   const norm = String(text || '').replace(/\r/g, '');
-  let paras = norm.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
-  if(paras.length <= 1) paras = norm.split(/\n+/).map(p => p.trim()).filter(Boolean);
-  return paras;
+  const blocks = norm.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean);
+  if(!blocks.length) return [];
+  const flatten = b => b.split(/\n+/).map(l => l.trim()).filter(Boolean).join(' ');
+  if(blocks.length === 1){
+    const lines = blocks[0].split(/\n+/).map(l => l.trim()).filter(Boolean);
+    if(lines.length > 1){
+      /* 判据：只要有一个「非末行」不是以句末标点结尾，说明这些换行是排版硬换行。
+         「一行一句」的文本里，除了最后一行，每一行都应当以 . ! ? 收尾。 */
+      const hardWrapped = lines.slice(0, -1).some(l => !/[.!?]["'”’)\]]*$/.test(l));
+      if(hardWrapped) return [lines.join(' ')];   // 硬换行：接成一段
+      return lines;                                // 一行一段
+    }
+  }
+  return blocks.map(flatten);
 }
 
 function buildSplitMessages(paras){
@@ -1075,8 +1214,12 @@ async function aiSplit(text){
   return paras;
 }
 
-/* 本地增强断句（AI 断句不可用时的兜底）：保护缩写与小数点，逐字符扫描不丢字符 */
-const ABBR_WORD = /^(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|Mt|vs|etc|viz|cf|No|Nos|Fig|Figs|Inc|Ltd|Co|Corp|Gen|Gov|Sen|Rep|Adm|Capt|Sgt|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)$/;
+/* 本地增强断句（AI 断句不可用时的兜底）：保护缩写与小数点，逐字符扫描不丢字符。
+   两类缩写要分开处理，否则句末的 "No." / "etc." 永远不会断句：
+   - TITLE_ABBR：后面一定跟姓名，永远不是句末（Mr. Smith / Dr. Jones）
+   - MAYBE_TERMINAL_ABBR：可以出现在句末（..., etc. / The answer was No.） */
+const TITLE_ABBR = /^(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|Mt|Gen|Gov|Sen|Rep|Adm|Capt|Sgt|vs)$/;
+const MAYBE_TERMINAL_ABBR = /^(?:etc|viz|cf|No|Nos|Fig|Figs|Inc|Ltd|Co|Corp|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)$/;
 const LIKE_ABBR = /^(?:[A-Za-z]\.)+[A-Za-z]?$/;          // U.S. / e.g. / a.m. / Ph.D.
 
 function localSplit(text){
@@ -1086,6 +1229,11 @@ function localSplit(text){
     let buf = '', i = 0;
     /* 句末标点：.!? 后允许跟引号/括号收尾 */
     const tailRe = /^(?:\.[.!?]*|[!?]+)["'”’)\]]*/;
+    /* '.' 之后第一个非空格字符（用来判断到底是不是句末） */
+    const afterDot = k => {
+      const m = /^\s*(.)/.exec(p.slice(k + 1));
+      return m ? m[1] : '';
+    };
     while(i < p.length){
       const ch = p[i];
       if(ch === '.' || ch === '!' || ch === '?'){
@@ -1093,17 +1241,38 @@ function localSplit(text){
         const next = p[i+1] || '';
         // 小数点 3.5
         if(ch === '.' && /\d/.test(prev) && /\d/.test(next)){ buf += ch; i++; continue; }
+        /* 省略号（连续 ≥2 个点，或一个 …）：只有后面确实起了一个新句子才断句。
+           否则 "He paused... then he left." 会被切成 "He paused..." + "then he left." 两个碎片。
+           整段省略号一次性吞掉，避免逐字符前进时又把剩下的小数点当句末。 */
+        if(ch === '…' || (ch === '.' && /^\.{2,}/.test(p.slice(i)))){
+          const run = ch === '…' ? '…' : /^\.+/.exec(p.slice(i))[0];
+          const afterRun = i + run.length;
+          const m2 = /^\s*(.)/.exec(p.slice(afterRun));
+          const nx2 = m2 ? m2[1] : '';
+          buf += run; i = afterRun;
+          if(nx2 && !/[A-Z"“'‘([]/.test(nx2)) continue;   // 句内省略号：不断句
+          out.push(buf.trim()); buf = '';
+          continue;
+        }
         if(ch === '.'){
           const head = buf.trimEnd();
           const lastWord = head.slice(head.lastIndexOf(' ') + 1);
           const twoBack = head.slice(0, head.length - lastWord.length - 1).trimEnd();
           const lastTwo = twoBack.slice(twoBack.lastIndexOf(' ') + 1);
-          // 单字母缩写 U.S. / 首字母缩写 a.m. / 常见缩写 Mr. Fig. Jr. —— 都不是句末
+          // 单字母缩写 U.S. / 首字母缩写 a.m. / 头衔类缩写 Mr. Dr. —— 都不是句末
           if(/^[A-Za-z]$/.test(lastWord)){ buf += ch; i++; continue; }
-          if(ABBR_WORD.test(lastWord)){ buf += ch; i++; continue; }
+          if(TITLE_ABBR.test(lastWord)){ buf += ch; i++; continue; }
+          if(LIKE_ABBR.test(lastWord)){ buf += ch; i++; continue; }
           if(/^[A-Za-z]$/.test(lastTwo) && lastWord.length <= 2){ buf += ch; i++; continue; }
-          if(next && /[A-Za-z0-9]/.test(next)){ buf += ch; i++; continue; }   // 词内点，如 www.x.com
-          // 后面还有小写字母开头的词，说明不是真正的句末（作者笔误或省略）
+          /* 可作句末的缩写（etc / No / Fig / Inc ...）：后面若不是「大写字母起始的新句子」就不是句末。
+             这一条修掉了 "The answer was No. Then he left." 整段不断句的问题。 */
+          if(MAYBE_TERMINAL_ABBR.test(lastWord)){
+            const nx = afterDot(i);
+            if(!nx || /[a-z0-9]/.test(nx)){ buf += ch; i++; continue; }
+          }
+          /* 词内点：点后面直接跟小写字母或数字（www.x.com / 3.5 已单独处理） */
+          if(next && /[a-z0-9]/.test(next)){ buf += ch; i++; continue; }
+          /* 后面还有小写字母开头的词，说明不是真正的句末（作者笔误或省略） */
           const after = p.slice(i + 1);
           const mRest = /^\s+([a-z])/.exec(after);
           if(mRest){ buf += ch; i++; continue; }
@@ -1124,7 +1293,6 @@ function localSplit(text){
     return out.filter(s => /\S/.test(s));
   }).filter(p => p.length);
 }
-
 async function splitArticle(text){
   try{
     setProgress(0, 1, 'AI 正在通读全文、切分句子…');
@@ -1150,22 +1318,30 @@ function buildAnalysisMessages(batch){
   const numbered = batch.map((s,i) => `[${i+1}] ${s.text}`).join('\n');
   const user = `请分析以下考研英语文章中的 ${batch.length} 个句子。
 
-对每句话输出一个对象，包含四个字段：
+对每句话输出一个对象，包含五个字段：
 
-1. "segments"：把整句切分为连续的语法成分段。所有段的 text 按顺序拼接后必须与原句逐字符完全一致（包括空格和标点）。type 只能取以下值：
-   subject(主语) / predicate(谓语) / object(宾语) / predicative(表语) / attributive(定语) / adverbial(状语) / complement(补足语) / attr_clause(定语从句) / appositive(同位语或同位语从句) / parenthesis(插入语) / other(连词、标点等无法归类的部分)。
+1. "segments"：把整句切分为连续的语法成分段。**从句内部也要照样切开**，即从句里的主语、谓语、宾语等同样单独成段并标成 subject / predicate / object / predicative。所有段的 text 按顺序拼接后必须与原句逐字符完全一致（包括空格和标点）。type 只能取以下 10 个值：
+   subject(主语) / predicate(谓语) / object(宾语) / predicative(表语) / attributive(定语) / adverbial(状语) / complement(补足语) / appositive(同位语) / parenthesis(插入语) / other(连词、标点等无法归类的部分)。
+   绝对不要在这里使用任何从句类型（如 attr_clause、obj_clause、adv_clause）——从句一律只写在下面的 "clauses" 字段里。
    每段附 "note"：用中文简要说明该成分的判断依据（15~40字），other 类型的 note 用空字符串。
+
+2. "clauses"：列出这句话里出现的**所有从句**（主句本身不要列进来），按在原文中出现的先后顺序。每项格式：
+   {"text": "该从句在原文中的完整片段（必须与原句逐字符一致，含 that/which/because 等引导词）", "type": "从句类型", "note": "判断依据（15~40字）"}
+   type 只能取以下 6 个值：
+   subj_clause(主语从句) / obj_clause(宾语从句) / pred_clause(表语从句) / attr_clause(定语从句) / adv_clause(状语从句) / appos_clause(同位语从句)
+   规则：从句之间**允许嵌套**（一个从句整体包含另一个），但**不允许部分重叠**；text 必须是原文里连续的片段，不要改写、不要省略中间的词；这句话没有从句就返回空数组 []。
 
 2. "gloss"：只收录重难点词汇和词组（考研 / 六级及以上难度），基础简单词（如 a, the, is, and, we, have, good, very 等）一律不收录。每项格式：
    {"w": "原文中的词或词组（必须与原文逐字符一致，保留原大小写）", "t": "简洁中文释义", "pos": "词性缩写（n. v. adj. adv. phr. 等）"}
    固定搭配、短语动词、习语优先整体收录（如 "be subjected to"、"dare not speak its name"）。
+   词组必须是原文里**连续出现**的片段，不要把中间隔着别的词的词拼成一个词组。
 
 3. "vocab"：从 gloss 中挑出本句最核心的 2~6 个，格式与 gloss 相同。
 
 4. "trans"：整句的通顺中文翻译。要求准确传达原意、符合中文表达习惯，人名地名保留英文原拼写，不要逐字硬译。
 
 输出 JSON 格式（只输出 JSON 本身）：
-{"sentences": [{"segments": [...], "gloss": [...], "vocab": [...], "trans": "..."}, ...]}
+{"sentences": [{"segments": [...], "clauses": [...], "gloss": [...], "vocab": [...], "trans": "..."}, ...]}
 "sentences" 数组长度必须恰好等于 ${batch.length}，顺序与输入句子一一对应。
 
 句子列表：
@@ -1266,9 +1442,27 @@ function allCacheKeys(){
   const keys = [];
   for(let i = 0; i < localStorage.length; i++){
     const k = localStorage.key(i);
-    if(k && (k.startsWith(CACHE_PRE) || k.startsWith(WORD_CACHE_PRE))) keys.push(k);
+    /* 匹配「任意版本」的缓存键：升版后旧版本数据也必须能被统计到、被清掉，
+       否则它们会一直占着 localStorage 配额，而缓存管理面板显示「当前没有缓存」。 */
+    if(k && CACHE_KEY_RE.test(k)) keys.push(k);
   }
   return keys;
+}
+/* 启动时对账：1) 清掉旧版本前缀的缓存（升版后结构不兼容，且不清理会一直占配额）；
+   2) 把「有数据但不在索引里」的孤儿键收编进索引（t:0 给一次宽限，之后按 TTL 自然过期），
+   否则它们永远不会被淘汰、也不会被过期检查。 */
+function reconcileCache(){
+  const stale = allCacheKeys().filter(k => !CACHE_CUR_PRE.some(p => k.startsWith(p)));
+  if(stale.length){
+    removeKeys(stale);
+    const remain = new Set(allCacheKeys());
+    setCacheIndex(getRawIndex().filter(e => remain.has(e.k)));
+  }
+  const idx = getRawIndex();
+  const known = new Set(idx.map(e => e.k));
+  const orphans = allCacheKeys().filter(k => !known.has(k));
+  if(orphans.length) setCacheIndex(idx.concat(orphans.map(k => ({k, t:0}))));
+  return {removed: stale.length, adopted: orphans.length};
 }
 function fmtSize(n){
   if(n < 1024) return n + ' B';
@@ -1310,6 +1504,65 @@ function resetButtons(){
   $('#reanalyzeBtn').style.display = (state.hasResult && inTextTab) ? 'inline-flex' : 'none';
 }
 
+/* 分批并发分析给定的句子集合。
+   抽成独立函数是为了「缓存部分命中」时只补跑缺的句子，而不是把整篇重跑一遍。
+   total 用整篇句数，进度条才不会被局部补跑带偏。 */
+async function runBatches(list, total){
+  if(!list || !list.length) return;
+  const batches = [];
+  for(let i = 0; i < list.length; i += BATCH_SIZE) batches.push(list.slice(i, i + BATCH_SIZE));
+
+  const refreshProgress = () => {
+    const ok = state.sentences.filter(s => s.status === 'ok').length;
+    const bad = state.sentences.filter(s => s.status === 'error').length;
+    setProgress(Math.min(total, ok + bad), total,
+      bad ? `已完成 ${ok + bad} / ${total} 句（${bad} 句失败，可单独重试）` : undefined);
+  };
+
+  const runBatch = async (batch) => {
+    let lastErr = null;
+    for(let attempt = 0; attempt < 2; attempt++){
+      try{
+        const raw = await callAPI(buildAnalysisMessages(batch));
+        const obj = parseJSON(raw);
+        const arr = Array.isArray(obj.sentences) ? obj.sentences : [];
+        batch.forEach((s,i) => {
+          const item = arr[i];
+          if(item && Array.isArray(item.segments) && item.segments.length){
+            s.data = item; s.status = 'ok'; s.error = '';
+          }else{
+            s.status = 'error'; s.error = '返回数据不完整';
+          }
+        });
+        break;
+      }catch(err){
+        lastErr = err;
+        /* 被 max_tokens 截断说明这一批太大：劈成两半分别重试，
+           而不是原样重试一次（原样重试必然再被截断，用户只能一句句手动重试）。 */
+        if(/截断/.test((err && err.message) || '') && batch.length > 1){
+          const mid = Math.ceil(batch.length / 2);
+          await runBatch(batch.slice(0, mid));
+          await runBatch(batch.slice(mid));
+          return;
+        }
+        if(attempt === 0) await new Promise(r => setTimeout(r, 1200 + Math.random() * 600));
+      }
+    }
+    if(lastErr && batch.every(s => s.status !== 'ok')){
+      batch.forEach(s => { s.status = 'error'; s.error = lastErr.message; });
+    }
+    batch.forEach(s => { if(s.status === 'ok') fillSentence(s); else if(s.status === 'error') fillSentenceError(s); });
+    refreshProgress();
+  };
+
+  const queue = batches.slice();
+  const workerCount = Math.max(1, Math.min(CONCURRENCY, queue.length));
+  const workers = Array.from({length: workerCount}, async () => {
+    while(queue.length) await runBatch(queue.shift());
+  });
+  await Promise.all(workers);
+}
+
 async function analyze(force){
   if(state.analyzing) return;
   if(!requireKey()) return;
@@ -1330,7 +1583,34 @@ async function analyze(force){
           loadResult(obj.sentences);
           touchCacheIndex(cacheKey);      // 命中即算"访问过"，过期计时从这一刻重新开始
           refreshCacheBtn();
-          setStatus('已命中本地缓存，未消耗 API 额度（可点「重新分析」强制刷新）', 'ok');
+          /* 部分成功也会写缓存，所以命中时可能还缺几句：只补跑缺的那些，不重跑全部 */
+          const missing = state.sentences.filter(s => s.status !== 'ok');
+          if(!missing.length){
+            setStatus('已命中本地缓存，未消耗 API 额度（可点「重新分析」强制刷新）', 'ok');
+            return;
+          }
+          state.analyzing = true;
+          $('#analyzeBtn').disabled = true;
+          $('#analyzeBtn').textContent = '分析中…';
+          $('#reanalyzeBtn').style.display = 'none';
+          setStatus(`缓存命中 ${state.sentences.length - missing.length} 句，正在补跑剩余 ${missing.length} 句…`, 'busy');
+          try{
+            await runBatches(missing, state.sentences.length);
+            buildVocab(); renderVocab();
+            $('#printBtn').disabled = false;
+            saveCache(cacheKey, JSON.stringify({
+              v: 6,
+              sentences: state.sentences.map(s => ({text:s.text, data:s.data, para:s.para}))
+            }));
+            const stillBad = state.sentences.filter(s => s.status !== 'ok').length;
+            setStatus(stillBad ? `补齐完成，仍有 ${stillBad} 句失败（可在句内点「重试」）` : '已补齐剩余句子，其余来自本地缓存',
+                      stillBad ? 'err' : 'ok');
+          }catch(err){
+            setStatus('补跑失败：' + (err && err.message ? err.message : err), 'err');
+          }finally{
+            resetButtons();
+            hideProgressLater(2200);
+          }
           return;
         }
       }catch(_){}
@@ -1369,49 +1649,7 @@ async function analyze(force){
 
     // 第二步：分批并发分析
     const total = state.sentences.length;
-    const batches = [];
-    for(let i = 0; i < total; i += BATCH_SIZE) batches.push(state.sentences.slice(i, i + BATCH_SIZE));
-
-    const refreshProgress = () => {
-      const ok = state.sentences.filter(s => s.status === 'ok').length;
-      const bad = state.sentences.filter(s => s.status === 'error').length;
-      setProgress(ok + bad, total, bad ? `已完成 ${ok + bad} / ${total} 句（${bad} 句失败，可单独重试）` : undefined);
-    };
-
-    const runBatch = async (batch) => {
-      let lastErr = null;
-      for(let attempt = 0; attempt < 2; attempt++){
-        try{
-          const raw = await callAPI(buildAnalysisMessages(batch));
-          const obj = parseJSON(raw);
-          const arr = Array.isArray(obj.sentences) ? obj.sentences : [];
-          batch.forEach((s,i) => {
-            const item = arr[i];
-            if(item && Array.isArray(item.segments) && item.segments.length){
-              s.data = item; s.status = 'ok'; s.error = '';
-            }else{
-              s.status = 'error'; s.error = '返回数据不完整';
-            }
-          });
-          break;
-        }catch(err){
-          lastErr = err;
-          if(attempt === 0) await new Promise(r => setTimeout(r, 1200 + Math.random() * 600));
-        }
-      }
-      if(lastErr && batch.every(s => s.status !== 'ok')){
-        batch.forEach(s => { s.status = 'error'; s.error = lastErr.message; });
-      }
-      batch.forEach(s => { if(s.status === 'ok') fillSentence(s); else if(s.status === 'error') fillSentenceError(s); });
-      refreshProgress();
-    };
-
-    const queue = batches.slice();
-    const workerCount = Math.max(1, Math.min(CONCURRENCY, queue.length));
-    const workers = Array.from({length: workerCount}, async () => {
-      while(queue.length) await runBatch(queue.shift());
-    });
-    await Promise.all(workers);
+    await runBatches(state.sentences, total, 0);
 
     state.hasResult = true;
     const okSents = state.sentences.filter(s => s.status === 'ok');
@@ -1421,14 +1659,17 @@ async function analyze(force){
       buildVocab();
       renderVocab();
       $('#printBtn').disabled = false;
-      if(!failed){
-        const saved = saveCache(cacheKey, JSON.stringify({
-          v: 5,
-          sentences: state.sentences.map(s => ({text:s.text, data:s.data, para:s.para}))
-        }));
-        if(!saved) setStatus('结果已生成，但浏览器缓存空间不足，本次未写入本地缓存', 'err');
-      }
+      /* 部分成功也要缓存（只存成功的句子，下次失败的句子才需要重跑）。
+         以前只有全部成功才写缓存，一句失败就要把整篇重新分析、重复计费，
+         和缓存面板里「重看同一篇文章不消耗额度」的说明不符。 */
+      const saved = saveCache(cacheKey, JSON.stringify({
+        v: 6,
+        sentences: state.sentences.map(s => ({text:s.text, data:s.data, para:s.para}))
+      }));
+      if(!saved) setStatus('结果已生成，但浏览器缓存空间不足，本次未写入本地缓存', 'err');
     }else{
+      buildVocab(); renderVocab();          // 清空侧栏，别留着上一篇的词
+      $('#printBtn').disabled = true;
       setStatus('全部分析失败，请检查 API Key、余额或网络后重试', 'err');
     }
 
@@ -1441,7 +1682,7 @@ async function analyze(force){
       );
     }
     if(failed) refreshProgress(); else setProgress(total, total, `已全部完成 · 共 ${total} 句`);
-    later(hideProgress, failed ? 6000 : 2200);
+    hideProgressLater(failed ? 6000 : 2200);
   }catch(err){
     // 任何未预期的异常都不能让界面卡在「分析中」
     setStatus('分析中断：' + (err && err.message ? err.message : err), 'err');
@@ -1484,30 +1725,46 @@ function rebuildParagraphs(){
 /* ============================================================
    文章渲染
    ============================================================ */
-const DETAIL_EVENTS = new WeakSet();
-
 function renderArticleSkeleton(){
   $('#emptyArticle').style.display = 'none';
   $('#articleWrap').style.display = 'block';
   const words = state.sentences.reduce((a,s) => a + (s.text.trim() ? s.text.trim().split(/\s+/).length : 0), 0);
-  $('#articleMeta').textContent = `${state.sentences.length} 句 · ${state.paragraphs.length} 段 · 约 ${words} 词 · 点击句子展开精析 · 双击单词看详解`;
+  $('#articleMeta').textContent = `${state.sentences.length} 句 · ${state.paragraphs.length} 段 · 约 ${words} 词 · 点句首序号展开精析 · 双击单词看详解`;
   $('#article').innerHTML = state.paragraphs.map(idxs =>
     '<div class="para"><div class="prose">' + idxs.map(i => {
       const s = state.sentences[i];
       const skeleton = s.status === 'pending' && state.analyzing ? skeletonHTML() : '';
-      return `<span class="p-sent" data-idx="${i}"><span class="p-num">${i+1}</span><span class="p-text">${esc(s.text)}</span><span class="p-detail">${skeleton}</span></span>`;
+      return `<span class="p-sent" data-idx="${i}"><span class="p-num" role="button" tabindex="0" title="展开 / 收起本句精析">${i+1}</span><span class="p-text">${esc(s.text)}</span><span class="p-detail">${skeleton}</span></span>`;
     }).join(' ') + '</div></div>'
   ).join('');
   $('#article').querySelectorAll('.p-sent').forEach(el => {
-    // 原句文字上的任何点击都交给 .p-detail 内部（空的时候什么都不做），
-    // 这样双击单词取上下文时一定是"这一句"，不会错位成别的句子
+    const idx = () => +el.dataset.idx;
     el.addEventListener('click', e => {
-      if(e.target.closest('.p-detail')) return;   // 详情区内的点击不触发折叠
-      if(e.target.closest('.p-text')) return;     // 原句文字不折叠，留给双击取词
-      const idx = +el.dataset.idx;
-      if(state.sentences[idx]?.status === 'pending') return;  // 还没结果时不做无意义的开合
-      toggleSentence(idx);
+      if(e.target.closest('.p-detail')) return;        // 详情区内的点击不触发折叠
+      const onNum = e.target.closest('.p-num');
+      if(!onNum && e.target.closest('.p-text')) return; // 原句文字留给双击取词
+      const i = idx();
+      if(state.sentences[i]?.status === 'pending') return;   // 还没结果时不做无意义的开合
+      toggleSentence(i);
     });
+    /* 键盘可达：序号是真正的开关，不能只有鼠标能用 */
+    el.querySelector('.p-num').addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleSentence(idx()); }
+    });
+    /* 原句文字的双击取词只在这里绑一次（之前放在 bindUnitEvents 里，重建时会重复绑定） */
+    const ptext = el.querySelector('.p-text');
+    if(ptext){
+      attachLongPress(ptext,
+        () => String(window.getSelection ? window.getSelection() : '').trim(),
+        () => state.sentences[idx()]?.text || '');
+      ptext.addEventListener('dblclick', e => {
+        const sel = String(window.getSelection ? window.getSelection() : '').trim();
+        if(!sel) return;                       // 没选中单词就交给浏览器默认行为
+        e.preventDefault(); e.stopPropagation();
+        const sObj = state.sentences[idx()] || null;
+        explainWord(sel, sObj ? sObj.text : '', false, sObj);
+      });
+    }
   });
   applyFilter();
 }
@@ -1516,7 +1773,8 @@ function skeletonHTML(){
   return '<div class="sent-skeleton"><div class="sk w90"></div><div class="sk w70"></div><div class="sk w50"></div></div>';
 }
 
-/* 把一句话的详情内容构建出来（幂等，事件只绑定一次） */
+/* 把一句话的详情内容构建出来。注意：detail 元素本身不会换，换的只是它的 innerHTML，
+   所以每次重建后都必须重新绑定它内部的事件（不能用 WeakSet 记「绑定过了」）。 */
 function ensureBuilt(el, s, idx){
   const detail = el.querySelector('.p-detail');
   if(!detail) return;
@@ -1525,10 +1783,8 @@ function ensureBuilt(el, s, idx){
   detail.dataset.state = 'ok';
   el.dataset.built = '1';
   el.classList.add('has-detail');
-  if(!DETAIL_EVENTS.has(detail)){
-    DETAIL_EVENTS.add(detail);
-    bindUnitEvents(el);
-  }
+  bindDetailEvents(detail, idx);
+  applyFilter();          // 重建出来的 unit 也要套用当前图例筛选，否则点了图例没反应
 }
 
 function toggleSentence(idx, forceOpen){
@@ -1619,10 +1875,11 @@ function fillSentenceError(s){
 /* ============================================================
    逐词标注构建
    ============================================================ */
-/* 分词：把小写词、数字、含连字符/撇号的词各当作一个整体，其余（标点、空格）逐字符 */
+/* 分词：字母数字 + 内部连字符/撇号，或数字内的小数点，各当作一个整体；其余（标点、空格）逐字符。
+   小数点必须并进同一个 token，否则词条 "3.5" 只能命中 "3"，渲染出来是 "3."。 */
 function tokenize(sent){
   const tokens = [];
-  const re = /[A-Za-z0-9]+(?:[-'’][A-Za-z0-9]+)*|[^\sA-Za-z0-9]/g;
+  const re = /[A-Za-z0-9]+(?:[-'’][A-Za-z0-9]+|\.\d+)*|[^\sA-Za-z0-9]/g;
   let m;
   while((m = re.exec(sent)) !== null){
     tokens.push({text:m[0], start:m.index, end:m.index + m[0].length, isWord:/[A-Za-z0-9]/.test(m[0])});
@@ -1630,35 +1887,75 @@ function tokenize(sent){
   return tokens;
 }
 
+/* 把位置吸附到「完整词」的边界上：落在单词内部就撑到该词的起/止。
+   这样任何区间都不会把单词切成两半（否则那半个词永远没有成分类型）。 */
+function snapStart(tokens, pos){
+  const t = tokens.find(t => t.isWord && t.start < pos && pos < t.end);
+  return t ? t.start : pos;
+}
+function snapEnd(tokens, pos){
+  const t = tokens.find(t => t.isWord && t.start < pos && pos < t.end);
+  return t ? t.end : pos;
+}
+
+/* 在原文里定位一段文本。两级策略：
+   1) 只从某个 token 的起点开始做大小写不敏感匹配，且结束点必须落在 token 边界上 ——
+      这样 "is" 绝不会命中 "This" 里的 is；"the process" 也能命中 "The process"。
+   2) 上面找不到时（比如片段以 "-" 这类非词字符开头），退化为任意位置查找，
+      再把两端吸附到完整 token 边界。
+   返回 {start,end} 或 null。 */
+function locateSpan(sent, sentLower, tokens, needle, from){
+  const low = String(needle == null ? '' : needle).toLowerCase();
+  if(!low) return null;
+  for(const tk of tokens){
+    if(tk.start < from) continue;
+    if(!sentLower.startsWith(low, tk.start)) continue;
+    const e = tk.start + low.length;
+    if(tokens.some(t => t.end === e || t.start === e)) return {start:tk.start, end:e};
+  }
+  const idx = sentLower.indexOf(low, Math.max(0, from));
+  if(idx < 0) return null;
+  const start = snapStart(tokens, idx), end = snapEnd(tokens, idx + low.length);
+  return end > start ? {start, end} : null;
+}
+
 /* 在原文中定位 AI 返回的成分段，输出连续、互不重叠、可完整覆盖原文的区间。
    关键：先把 AI 给的范围吸附到“词边界”，再按 token 边界交错切分，
-   这样即使 AI 截断了单词或给了重叠范围，输出也不会丢字/重字。 */
+   这样即使 AI 截断了单词或给了重叠范围，输出也不会丢字/重字。
+   另外：重复出现的片段要落到各自的出现位置（游标必须推进），已被占用的位置要往后找。 */
 function alignSegments(sent, segments, tokens){
-  const wordish = c => /[A-Za-z0-9]/.test(c || '');
-  const wordStartAt = pos => { const t = tokens.find(t => t.isWord && t.start <= pos && pos < t.end); return t ? t.start : pos; };
-  const wordEndAt = pos => { const t = tokens.find(t => t.isWord && t.start < pos && pos <= t.end); return t ? t.end : pos; };
-
-  const findRange = (needle, from) => {
-    let idx = sent.indexOf(needle, from);
-    if(idx < 0) idx = sent.indexOf(needle);
-    if(idx < 0) return null;
-    let s0 = idx, e0 = idx + needle.length;
-    if(wordish(needle[0])) while(s0 > 0 && wordish(sent[s0-1])) s0--;
-    if(wordish(needle[needle.length-1])) while(e0 < sent.length && wordish(sent[e0])) e0++;
-    return {rawStart:idx, rawEnd:idx + needle.length, start:s0, end:e0};
-  };
-
+  const sentLower = sent.toLowerCase();
   const items = [];
   let searchFrom = 0;
   (segments || []).forEach(raw => {
     if(raw == null) return;
     const needle = String(raw.text == null ? '' : raw.text);
     if(!needle) return;
-    const r = findRange(needle, searchFrom) || findRange(needle, 0);
+    /* 找到第一个「还没被别的成分占用」的出现位置，而不是无脑取第一个。
+       先按游标向后找；找不到说明 AI 给的顺序不是原文顺序，再从头找一次兜底。 */
+    let r = null;
+    for(const from0 of [searchFrom, 0]){
+      let from = from0;
+      for(let guard = 0; guard < 12; guard++){
+        const cand = locateSpan(sent, sentLower, tokens, needle, from);
+        if(!cand) break;
+        if(!items.some(it => cand.start < it.end && cand.end > it.start)){ r = cand; break; }
+        from = cand.end;
+      }
+      if(r || from0 === 0) break;
+    }
     if(!r) return;
-    const type = TYPES[raw.type] ? raw.type : 'other';
-    items.push({start:Math.min(r.start, r.rawStart), end:Math.max(r.end, r.rawEnd), type, note:raw.note ? String(raw.note) : ''});
+    /* 类型：只认角色层；旧数据里写进 segments 的从句类型折成对应角色，
+       rawType 留着，供 buildDetailHTML 补造一条从句跨度（向后兼容）。 */
+    const rawType = String(raw.type == null ? '' : raw.type);
+    const type = ROLES[rawType] ? rawType : (LEGACY_CLAUSE_ROLE[rawType] || 'other');
+    items.push({start:r.start, end:r.end, type, rawType, note:raw.note ? String(raw.note) : ''});
+    searchFrom = r.end;
   });
+
+  /* 按起点排序：下面的切分是单向推进的，若 AI 给的顺序不是原文顺序，
+     不排序会让「起点更靠前」的片段被判成已越过而整段丢掉。 */
+  items.sort((a, b) => a.start - b.start);
 
   /* 按 token 边界把区间切成互不重叠、首尾相连的小块 */
   const out = [];
@@ -1667,20 +1964,20 @@ function alignSegments(sent, segments, tokens){
     if(it.end <= pos) continue;
     const s0 = Math.max(pos, it.start);
     const end = Math.max(s0, Math.min(sent.length, it.end));
-    if(s0 > pos) out.push({start:pos, end:s0, type:'other', note:''});
+    if(s0 > pos) out.push({start:pos, end:s0, type:'other', rawType:'', note:''});
     let p = s0;
     for(const tk of tokens){
       if(tk.end <= p || tk.start >= end) continue;
       const a = Math.max(p, tk.start), b = Math.min(tk.end, end);
       if(a >= b) continue;
-      if(a > p) out.push({start:p, end:a, type:'other', note:''});
-      out.push({start:a, end:b, type:it.type, note:it.note});
+      if(a > p) out.push({start:p, end:a, type:'other', rawType:'', note:''});
+      out.push({start:a, end:b, type:it.type, rawType:it.rawType, note:it.note});
       p = b;
     }
-    if(p < end) out.push({start:p, end:end, type:it.type, note:it.note});
+    if(p < end) out.push({start:p, end:end, type:it.type, rawType:it.rawType, note:it.note});
     pos = Math.max(pos, end);
   }
-  if(pos < sent.length) out.push({start:pos, end:sent.length, type:'other', note:''});
+  if(pos < sent.length) out.push({start:pos, end:sent.length, type:'other', rawType:'', note:''});
 
   /* 数值兜底：强制单调、连续、覆盖全文 */
   let cursor = 0;
@@ -1688,12 +1985,73 @@ function alignSegments(sent, segments, tokens){
     const start = cursor;
     const end = Math.max(start, Math.min(sent.length, r.end));
     cursor = end;
-    return {start, end, type:r.type, note:r.note};
+    return {start, end, type:r.type, rawType:r.rawType, note:r.note};
   }).filter(r => r.end > r.start);
 }
 
-/* 在原文中定位重点词汇/词组（长短语优先，词边界对齐，整体命中整词）
-   返回 {start,end,t,pos,key,extended}；extended 表示实际渲染范围被词边界放大过 */
+/* 定位从句跨度并规范化：
+   - 允许嵌套（一个整体包含另一个），禁止部分重叠（部分重叠的裁掉重叠部分）；
+   - 完全重复的丢弃；
+   - 算出每个从句的嵌套层级 level（= 被多少个从句包含），用于线型的垂直堆叠。
+   注意 level 与「角色深度」不是一回事：角色深度是「某个位置被多少个从句包含」，
+   主句位置为 0；而从句自身最外层 level = 0。 */
+function alignClauses(sent, sentLower, clauses, tokens, legacyClauseSpans){
+  const raw = [];
+  const used = [];
+  (clauses || []).forEach(c => {
+    if(c == null) return;
+    const needle = String(c.text == null ? '' : c.text).trim();
+    const type = CLAUSES[c.type] ? c.type : null;
+    if(!needle || !type) return;
+    /* 同一句里可能有多个完全相同的从句，逐个往后试 */
+    let r = null, from = 0;
+    for(let guard = 0; guard < 12; guard++){
+      const cand = locateSpan(sent, sentLower, tokens, needle, from);
+      if(!cand) break;
+      if(!used.some(u => cand.start < u.end && cand.end > u.start)){ r = cand; break; }
+      from = cand.end;
+    }
+    if(!r) return;
+    used.push([r.start, r.end]);
+    raw.push({start:r.start, end:r.end, type, note:c.note ? String(c.note) : ''});
+  });
+  /* 旧格式补造：模型把从句类型写在 segments 里时，用已对齐的片段合并出跨度 */
+  (legacyClauseSpans || []).forEach(s => raw.push(s));
+
+  raw.sort((a, b) => a.start - b.start || b.end - a.end);
+  const kept = [];
+  for(const s of raw){
+    if(s.end <= s.start) continue;
+    if(kept.some(k => k.start === s.start && k.end === s.end)) continue;
+    const container = kept
+      .filter(k => k.start <= s.start && s.end <= k.end)
+      .sort((a, b) => (a.end - a.start) - (b.end - b.start))[0];
+    if(container){ s.level = (container.level || 0) + 1; kept.push(s); continue; }
+    const blocker = kept.find(k => s.start < k.end && s.end > k.start);
+    if(blocker){
+      s.start = blocker.end;                       // 部分重叠：裁到不重叠为止
+      if(s.end <= s.start) continue;
+    }
+    s.level = 0;
+    kept.push(s);
+  }
+  kept.sort((a, b) => a.start - b.start || b.end - a.end);
+  kept.forEach((k, i) => { k.id = 'cl' + i; });
+  return kept;
+}
+
+/* 在原文中定位重点词汇/词组（长短语优先，词边界对齐，整体命中整词）。
+   返回 [{start,end,t,pos,key}]。
+
+   旧实现有三个硬伤，导致「偶尔标到错误的位置」：
+   1) headMatch 允许双向任意前缀匹配（n.startsWith(p) || p.startsWith(n)），
+      于是词条 "form" 会命中 "Formerly"、"theory" 会命中 "The"、"helped" 会命中 "He"；
+   2) 只用 findIndex 取第一个匹配位置，同一句话里该词出现多次时可能落在错的那一处；
+   3) 多词词组是「跳过任意词去凑」，只用一个 60 字符的上限兜底，
+      于是 "look after" 会命中 "look into the matter and will look after"（跨了 40 个字符）。
+
+   新实现：受控词形匹配（全等/有限词形变化，绝不做任意前缀）+ 只匹配**连续**的词 +
+   取最优候选（全等优先、跨度短优先、靠前优先）+ 位置被占用时继续试下一处。 */
 function locateGlosses(sent, gloss, tokens){
   let items = (gloss || [])
     .filter(g => g && g.w && String(g.w).trim() && g.t)
@@ -1705,38 +2063,67 @@ function locateGlosses(sent, gloss, tokens){
   const wordTokens = tokens.filter(t => t.isWord);
   const used = [];
   const found = [];
-  const norm = x => String(x).toLowerCase().replace(/[^a-z0-9']/g, '');
-  const headMatch = (text, part) => {
-    const n = norm(text), p = norm(part);
-    if(!n || !p) return false;
-    return n === p || n.startsWith(p) || p.startsWith(n);
+
+  /* 归一化：弯引号与直引号等价、连字符当空格（"well-known" 与 "well known" 等价） */
+  const norm = x => String(x).toLowerCase()
+    .replace(/[’‘`´]/g, "'").replace(/[-–—]/g, ' ')
+    .replace(/[^a-z0-9' ]/g, '').replace(/\s+/g, ' ').trim();
+
+  const SUFFIXES = ['s','es','ed','d','ing','ies','ier','iest','ly'];
+  /* 受控词形匹配：0 = 不匹配，1 = 词形变化，2 = 完全相同。
+     只允许「加/去常见词尾」这一种差异，不做任意前缀比较。 */
+  const partScore = (tokenText, part) => {
+    const n = norm(tokenText), p = norm(part);
+    if(!n || !p) return 0;
+    if(n === p) return 2;
+    for(const suf of SUFFIXES){
+      if(p.length > suf.length + 1 && p.endsWith(suf) && n === p.slice(0, p.length - suf.length)) return 1;
+      if(n.length > suf.length + 1 && n.endsWith(suf) && p === n.slice(0, n.length - suf.length)) return 1;
+    }
+    /* 词尾 y ↔ ies/i 的变形：studies/study */
+    if(/ies$/.test(p) && n === p.slice(0, -3) + 'y') return 1;
+    if(/ies$/.test(n) && p === n.slice(0, -3) + 'y') return 1;
+    return 0;
   };
+  /* 全大写词条（US / AI / DNA）保留大小写，否则会被小写归一化误配到 us / aims */
+  const acronym = w => /^[A-Z]{2,}$/.test(w);
 
   for(const g of items){
-    const parts = g.w.toLowerCase().split(/\s+/).filter(Boolean);
+    const parts = g.w.split(/\s+/).filter(Boolean);
     if(!parts.length) continue;
-    /* 起点：某个词与词条首词匹配（允许 AI 截断词尾） */
-    let i0 = wordTokens.findIndex(t => headMatch(t.text, parts[0]));
-    if(i0 < 0) continue;
-    let start = wordTokens[i0].start;
-    let end = wordTokens[i0].end;
+    const caseSensitive = acronym(g.w);
 
-    /* 多词词组：沿 token 顺序逐词匹配，允许空格、标点与轻度词形差异 */
-    if(parts.length > 1){
-      let pi = 1, k = i0 + 1, ok = false;
-      while(pi < parts.length && k < wordTokens.length){
-        const tk = wordTokens[k];
-        if(tk.start - end > 60) break;                     // 跨度过大，判定为跨句乱配
-        if(headMatch(tk.text, parts[pi])){ end = tk.end; pi++; }
-        k++;
+    /* 枚举所有候选：只在**连续**的词 token 上依次匹配，中间允许标点，不允许跳过单词。
+       variants 里额外加一条「整条词条当成一个词」的写法，
+       用来处理连字符与空格不等价的情况：词条 "well known" 要能命中原文的 "well-known"。 */
+    const variants = [parts];
+    if(parts.length > 1) variants.push([g.w]);
+    const cands = [];
+    for(const vparts of variants){
+      for(let i0 = 0; i0 < wordTokens.length; i0++){
+        const first = wordTokens[i0];
+        const s0 = caseSensitive ? (first.text === vparts[0] ? 2 : 0) : partScore(first.text, vparts[0]);
+        if(!s0) continue;
+        let score = s0, end = first.end, ok = true;
+        for(let pi = 1; pi < vparts.length; pi++){
+          const tk = wordTokens[i0 + pi];
+          if(!tk){ ok = false; break; }
+          const sc = caseSensitive ? (tk.text === vparts[pi] ? 2 : 0) : partScore(tk.text, vparts[pi]);
+          if(!sc){ ok = false; break; }
+          score += sc; end = tk.end;
+        }
+        if(!ok) continue;
+        cands.push({start:first.start, end, score, span: end - first.start});
       }
-      if(pi >= parts.length) ok = true;
-      if(!ok) continue;                                    // 没能完整匹配，跳过该词条
     }
-    if(end <= start) continue;
-    if(used.some(([s,e]) => start < e && end > s)) continue;
-    used.push([start, end]);
-    found.push({start, end, t:g.t, pos:g.pos, key:g.w.toLowerCase(), extended:end - start !== g.w.length});
+    if(!cands.length) continue;
+    /* 最优优先：匹配度高的优先，其次跨度短的（更贴合的连续片段），再靠前的 */
+    cands.sort((a,b) => b.score - a.score || a.span - b.span || a.start - b.start);
+    /* 依次尝试，跳过已被别的词条占用的位置（而不是直接放弃整个词条） */
+    const pick = cands.find(c => !used.some(([s,e]) => c.start < e && c.end > s));
+    if(!pick) continue;
+    used.push([pick.start, pick.end]);
+    found.push({start:pick.start, end:pick.end, t:g.t, pos:g.pos, key:g.w.toLowerCase()});
   }
   return found;
 }
@@ -1749,33 +2136,65 @@ function unitStyle(tconf){
   return s;
 }
 
-/* withTitle：true 时给成分加原生 title 属性 */
+/* 文字样式：颜色随从句深度变淡（主句最深），主干在 depth 0 才加粗 */
+function unitStyle(tconf, depth){
+  let s = `color:${depth ? hexTint(tconf.color, DEPTH_ALPHA[clampDepth(depth)]) : tconf.color}`;
+  if(tconf.bold) s += ';font-weight:700';
+  if(tconf.italic) s += ';font-style:italic';
+  return s;
+}
+
+/* 构建逐词标注：两层叠加
+   角色层 segs    → 文字颜色（关/从句深度越深越淡）+ 主句主干黄底
+   从句层 clauses → .clause-wrap 包裹，用 background-image 画线型，嵌套时按层级上下堆叠 */
 function buildDetailHTML(s, withTitle = false){
   const sent = String(s.text || ''), d = s.data || {};
   const tokens = tokenize(sent);
+  const sentLower = sent.toLowerCase();
   const segs = alignSegments(sent, d.segments, tokens);
+
+  /* 向后兼容：模型仍把从句类型写在 segments 里时，把连续同类型的片段合并成一条从句跨度。
+     片段之间会夹着只含空格/标点的「other」过渡片段，它们不应该打断合并；
+     只有真正含字母数字的成分才说明从句到头了。 */
+  const legacy = [];
+  {
+    let cur = null;
+    for(const sg of segs){
+      if(sg.rawType && CLAUSES[sg.rawType]){
+        const gap = cur ? sent.slice(cur.end, sg.start) : '';
+        if(cur && cur.type === sg.rawType && !/[A-Za-z0-9]/.test(gap)) cur.end = sg.end;
+        else { cur = {start:sg.start, end:sg.end, type:sg.rawType, note:sg.note || ''}; legacy.push(cur); }
+      }else if(cur && /[A-Za-z0-9]/.test(sent.slice(sg.start, sg.end))){
+        cur = null;
+      }
+    }
+  }
+  const clauses = alignClauses(sent, sentLower, d.clauses, tokens, legacy);
+  const clauseById = new Map(clauses.map(c => [c.id, c]));
+
   const glosses = locateGlosses(sent, d.gloss, tokens);
-  const typeAt = pos => {
-    const r = segs.find(r => pos >= r.start && pos < r.end);
-    return r ? r.type : 'other';
-  };
-  const noteAt = pos => {
-    const r = segs.find(r => pos >= r.start && pos < r.end);
-    return r && r.note ? r.note : '';
-  };
+  const segAt = pos => segs.find(r => pos >= r.start && pos < r.end) || null;
+  const typeAt = pos => { const r = segAt(pos); return r ? r.type : 'other'; };
+  const noteAt = pos => { const r = segAt(pos); return r && r.note ? r.note : ''; };
   const glossAt = pos => glosses.find(g => pos >= g.start && pos < g.end) || null;
+  /* 某个位置所属的从句栈（由外到内）；栈长度就是该位置的「角色深度」 */
+  const clausePathAt = pos => clauses.filter(c => pos >= c.start && pos < c.end).map(c => c.id);
+  const clauseLabel = path => path.length ? (CLAUSES[clauseById.get(path[path.length-1]).type] || {}).label || '' : '';
+  /* 只有「主句主干」才有底色：深度 0 且是主/谓/宾/表 */
+  const bgFor = (tconf, path) => (!path.length && tconf.backbone) ? BACKBONE_BG : null;
 
   const parts = [];
   /* 切分符号（标点、空格、括号）不再作为裸文本输出：给它们套上与所属成分同色的 unit，
      否则它们会继承详情面板的深色 --ink，出现「一个括号黑、一个括号灰」的错色问题。
      符号只染色、不加粗不倾斜，避免标点比单词还抢眼。 */
-  const markStyle = tconf => tconf && tconf.color ? ` style="color:${tconf.color}"` : '';
+  const markStyle = (tconf, depth) => tconf && tconf.color ? ` style="color:${depth ? hexTint(tconf.color, DEPTH_ALPHA[clampDepth(depth)]) : tconf.color}"` : '';
   const pushMark = tk => {
     const type = typeAt(tk.start);
-    const tconf = TYPES[type];
-    const html = `<span class="unit" data-type="${type}" data-note="">` +
-      `<span class="w" data-w="${escA(tk.text)}"${markStyle(tconf)}>${esc(tk.text)}</span></span>`;
-    parts.push({html, bg:tconf && tconf.bg ? tconf.bg : null, space:''});
+    const tconf = ROLES[type] || ROLES.other;
+    const path = clausePathAt(tk.start);
+    const html = `<span class="unit" data-type="${type}" data-note="" data-clause="">` +
+      `<span class="w" data-w="${escA(tk.text)}"${markStyle(tconf, path.length)}>${esc(tk.text)}</span></span>`;
+    parts.push({html, bg:bgFor(tconf, path), space:'', clausePath:path});
   };
 
   let i = 0;
@@ -1819,19 +2238,26 @@ function buildDetailHTML(s, withTitle = false){
     }
     let type = 'other', best = -1;
     tally.forEach((v, key) => {
-      const w = TYPES[key] && TYPES[key].bg ? 2 : 1;     // 有色块的成分优先，避免被零碎 other 吃掉
+      const w = (key !== 'other' && ROLES[key]) ? 2 : 1;   // 真实成分优先，避免被零碎 other 吃掉
       if(v * w > best){ best = v * w; type = key; }
     });
     if(!wordCount && !tally.size) type = typeAt(tk.start);
     const note = noteAt(tk.start) || noteAt(tokens[k].start);
-    const tconf = TYPES[type] || TYPES.other;
-    const bgType = !!(tconf.bg);
+    const tconf = ROLES[type] || ROLES.other;
+    const path = clausePathAt(tokens[i].start);
+    const depth = path.length;
+    const innermost = path.length ? clauseById.get(path[path.length-1]) : null;
     const colored = type !== 'other';
-    const wStyle = colored ? ` style="${unitStyle(tconf)}"` : '';
+    const wStyle = colored ? ` style="${unitStyle(tconf, depth)}"` : '';
     const cls = ['unit'];
     if(colored) cls.push('clickable');
     if(g) cls.push('has-gloss');
-    const title = (withTitle && colored) ? ` title="${esc(tconf.label + (note ? '：' + note : ''))}"` : '';
+    /* 成分说明一直挂在 title 上：模型为每段付费生成的 note 终于能看见了 */
+    const titleParts = [];
+    if(colored) titleParts.push(tconf.label);
+    if(innermost) titleParts.push(CLAUSES[innermost.type].label);
+    if(note) titleParts.push(note);
+    const title = titleParts.length ? ` title="${esc(titleParts.join(' · '))}"` : '';
     /* 单词内部夹着的符号（如 3.5 的点）不算尾随符号，跟单词一起正常染色；
        只有真正拖在单词后面的符号（逗号、句号、括号）才单独包一层，
        去掉粗体/斜体继承，保证成对括号看起来一致 */
@@ -1841,7 +2267,7 @@ function buildDetailHTML(s, withTitle = false){
     for(let x = lastWordIdx + 1; x <= k; x++) if(!tokens[x].isWord) trailing.push(tokens[x]);
     const headEnd = trailing.length ? trailing[0].start : unitEnd;
     const headText = sent.slice(tokens[i].start, headEnd);
-    const symStyle = markStyle(tconf);
+    const symStyle = markStyle(tconf, depth);
     let wInner = esc(headText);
     if(trailing.length){
       if(g){
@@ -1850,44 +2276,65 @@ function buildDetailHTML(s, withTitle = false){
       }else{
         wInner += esc(sent.slice(headEnd, trailing[0].start));
         trailing.forEach((tk2, n) => {
-          const style = markStyle(TYPES[typeAt(tk2.start)]) || symStyle;
+          const pth = clausePathAt(tk2.start);
+          const style = markStyle(ROLES[typeAt(tk2.start)] || ROLES.other, pth.length) || symStyle;
           wInner += `<span class="unit-sym"${style}>${esc(tk2.text)}</span>`;
           const nxt = trailing[n+1];
           if(nxt) wInner += esc(sent.slice(tk2.end, nxt.start));
         });
       }
     }
-    const unitHtml = `<span class="${cls.join(' ')}" data-type="${type}" data-note="${esc(note)}"${g ? ` data-vk="${escA(g.key)}"` : ''}${title}>` +
+    const unitHtml = `<span class="${cls.join(' ')}" data-type="${type}" data-note="${esc(note)}" data-clause="${innermost ? innermost.type : ''}"${g ? ` data-vk="${escA(g.key)}"` : ''}${title}>` +
       `<span class="w" data-w="${escA(display)}"${wStyle}>${wInner}</span>` +
       `<span class="gloss">${g ? esc(g.t) : ''}</span></span>`;
     const nextStart = (k + 1 < tokens.length) ? tokens[k+1].start : sent.length;
-    parts.push({html:unitHtml, bg:bgType ? tconf.bg : null, space:esc(sent.slice(unitEnd, nextStart))});
+    parts.push({html:unitHtml, bg:bgFor(tconf, path), space:esc(sent.slice(unitEnd, nextStart)), clausePath:path});
     i = k + 1;
   }
 
+  /* 组装：从句包装按包含关系嵌套；黄底只在主句主干上出现，
+     所以「底色块」与「从句包装」天然互斥、不会交叉嵌套。 */
   let html = '<div class="annotated">';
-  let openBg = null;   // 相邻成分底色相同（如主谓宾表共用黄底）时，色块连成一片
-  const closeWrap = () => { if(openBg){ html += '</span>'; openBg = null; } };
+  let openBg = null;
+  let stack = [];                                   // 当前打开的从句 id（由外到内）
+  const closeBg = () => { if(openBg){ html += '</span>'; openBg = null; } };
   parts.forEach((p, idx) => {
-    if(p.bg){
-      if(openBg !== p.bg){
-        closeWrap();
-        html += `<span class="seg-wrap" style="background:${p.bg}">`;
-        openBg = p.bg;
+    const path = p.clausePath;
+    let common = 0;
+    while(common < stack.length && common < path.length && stack[common] === path[common]) common++;
+    if(path.length) closeBg();                      // 进入从句前必须收掉底色块
+    for(let x = stack.length - 1; x >= common; x--) html += '</span>';
+    stack = stack.slice(0, common);
+    for(let x = common; x < path.length; x++){      // 打开新的一层从句
+      const c = clauseById.get(path[x]);
+      if(!c) continue;
+      const row = Math.min(x + 1, 3);               // 第 1/2/3 层线位（更深就叠在第 3 层）
+      html += `<span class="clause-wrap ${CLAUSES[c.type].cls}${row > 1 ? ' cd' + row : ''}" data-clause="${c.type}">`;
+      stack.push(path[x]);
+    }
+    if(!path.length && p.bg){
+      if(openBg !== p.bg){ closeBg(); html += `<span class="seg-wrap" style="background:${p.bg}">`; openBg = p.bg; }
+    }else closeBg();
+    html += p.html;
+
+    /* 空格归属：下一个 unit 还在同一层从句里，就把空格留在包装内，线才不会断开 */
+    const next = parts[idx+1];
+    let keep = 0;
+    if(next){
+      for(let x = 0; x < stack.length && x < next.clausePath.length; x++){
+        if(stack[x] === next.clausePath[x]) keep = x + 1; else break;
       }
-      html += p.html;
-      const next = parts[idx+1];
-      if(next && next.bg === p.bg){
-        html += p.space;              // 同底色的相邻成分之间，空格留在色块内，保持连贯
-      }else{
-        closeWrap(); html += p.space;
-      }
+    }
+    if(!path.length && next && next.bg && next.bg === openBg){
+      html += p.space;                              // 同底色相邻，空格留在色块内保持连贯
     }else{
-      closeWrap();
-      html += p.html + p.space;
+      for(let x = stack.length - 1; x >= keep; x--) html += '</span>';
+      stack = stack.slice(0, keep);
+      closeBg(); html += p.space;
     }
   });
-  closeWrap();
+  for(let x = stack.length - 1; x >= 0; x--) html += '</span>';
+  closeBg();
   html += '</div>';
   return html;
 }
@@ -1902,6 +2349,7 @@ function buildTransHTML(s){
 /* 完整详情 = 逐词标注 + 整句翻译 */
 function buildFullDetailHTML(s, withTitle = false){
   const tools = '<div class="detail-tools">' +
+    `<button class="mini-btn" data-collapse-sent="1">收起本句</button>` +
     `<button class="mini-btn" data-copy-sent="${state.sentences.indexOf(s)}">复制原句</button>` +
     `<button class="mini-btn" data-copy-trans="${state.sentences.indexOf(s)}">复制译文</button>` +
     '</div>';
@@ -1964,52 +2412,41 @@ function attachLongPress(el, word, getSent){
   }, true);
 }
 
-function bindUnitEvents(scope){
+/* 只绑定「详情子树」内部的事件。detail 元素的 innerHTML 每次重建都是全新的 DOM，
+   所以每次重建后调用本函数重新绑定是正确且必要的（不会再出现重试后内容点不动的问题）。
+   注意：原句文字 .p-text 的事件在 renderArticleSkeleton 里绑一次，不在这里绑，避免重复。 */
+function bindDetailEvents(detail, idx){
+  const sOf = () => state.sentences[idx] || null;
   // 双击任意单词 → AI 详解
-  scope.querySelectorAll('.unit').forEach(u => {
+  detail.querySelectorAll('.unit').forEach(u => {
     u.addEventListener('dblclick', e => {
       e.preventDefault(); e.stopPropagation();
       const word = (u.querySelector('.w')?.textContent || '').trim();
       if(!word) return;
       pickUnit(u);            // 双击也保持荧光标记，视觉上不"掉色"
-      const sentEl = u.closest('.p-sent');
-      const sObj = sentEl ? state.sentences[+sentEl.dataset.idx] : null;
+      const sObj = sOf();
       explainWord(word, sObj ? sObj.text : '', false, sObj);
     });
     // 触屏：长按查词
     attachLongPress(u,
       () => (u.querySelector('.w')?.textContent || '').trim(),
-      () => { const se = u.closest('.p-sent'); return se ? (state.sentences[+se.dataset.idx]?.text || '') : ''; });
-  });
-  // 原句文字上双击 → 用整句作上下文，这也是 AI 解释的入口
-  scope.querySelectorAll('.p-text').forEach(el => {
-    attachLongPress(el,
-      () => String(window.getSelection ? window.getSelection() : '').trim(),
-      () => { const se = el.closest('.p-sent'); return se ? (state.sentences[+se.dataset.idx]?.text || '') : ''; });
-    el.addEventListener('dblclick', e => {
-      const sel = String(window.getSelection ? window.getSelection() : '').trim();
-      if(!sel) return;                       // 没选中单词就交给浏览器默认行为
-      e.preventDefault(); e.stopPropagation();
-      const sentEl = el.closest('.p-sent');
-      const sObj = sentEl ? state.sentences[+sentEl.dataset.idx] : null;
-      explainWord(sel, sObj ? sObj.text : '', false, sObj);
-    });
+      () => (sOf()?.text || ''));
   });
   // 单击 → 荧光笔高亮（不做任何弹窗）
-  scope.querySelectorAll('.unit.clickable').forEach(u => {
+  detail.querySelectorAll('.unit.clickable').forEach(u => {
     u.addEventListener('click', e => {
       e.stopPropagation();
       pickUnit(u);
     });
   });
   // 译文点击复制
-  scope.querySelectorAll('.trans').forEach(el => {
+  detail.querySelectorAll('.trans').forEach(el => {
     const doCopy = e => { e.stopPropagation(); copyText(el.textContent.replace(/^译文/, '').trim()); };
     el.addEventListener('click', doCopy);
     el.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); doCopy(e); } });
   });
   // 复制按钮
-  scope.querySelectorAll('[data-copy-sent],[data-copy-trans]').forEach(b => {
+  detail.querySelectorAll('[data-copy-sent],[data-copy-trans]').forEach(b => {
     b.addEventListener('click', e => {
       e.stopPropagation();
       const isSent = e.currentTarget.dataset.copySent !== undefined;
@@ -2019,13 +2456,23 @@ function bindUnitEvents(scope){
       copyText(isSent ? s.text : ((s.data && s.data.trans) || ''));
     });
   });
+  // 逐句收起：展开后原句文字和序号都在视图里，这里给一个明确的收起入口
+  const collapse = detail.querySelector('[data-collapse-sent]');
+  if(collapse) collapse.addEventListener('click', e => {
+    e.stopPropagation();
+    const el = detail.closest('.p-sent');
+    if(el) el.classList.remove('open');
+  });
 }
 document.addEventListener('scroll', clearPick, true);
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape'){
     clearPick();
-    $('#keyModal').classList.remove('show');
-    $('#wordModal').classList.remove('show');
+    /* 所有弹窗都要能被 Esc 关掉（提示词编辑器和缓存管理以前只能点关闭按钮） */
+    ['#keyModal','#wordModal','#promptModal','#cacheModal'].forEach(sel => {
+      const el = $(sel);
+      if(el) el.classList.remove('show');
+    });
   }
 });
 
@@ -2068,15 +2515,22 @@ function renderVocab(){
 }
 
 function jumpToWord(key){
-  const sel = `.unit[data-vk="${escA(key)}"]`;
-  let unit = $('#article').querySelector(sel);
+  /* 属性选择器里不能直接塞 HTML 实体：data-vk 的值是「解码后」的原文（如 r&d），
+     而 escA 会把它写成 r&amp;d，CSS 选择器不认实体，于是永远匹配不到。
+     用 CSS.escape 做转义才对（没有 CSS.escape 的环境退化为遍历比较）。 */
+  const escSel = k => (window.CSS && CSS.escape) ? CSS.escape(k) : String(k).replace(/["\\]/g, '\\$&');
+  const findUnit = () => {
+    if(window.CSS && CSS.escape) return $('#article').querySelector(`.unit[data-vk="${escSel(key)}"]`);
+    return $$('#article .unit').find(u => u.dataset.vk === key) || null;
+  };
+  let unit = findUnit();
   if(!unit){
     // 该词所在句可能尚未展开：先在数据中定位句子并展开，再取标注元素
     const idx = state.sentences.findIndex(s => s.status === 'ok' &&
       (s.data?.gloss || []).some(g => g.w && String(g.w).toLowerCase() === key));
     if(idx >= 0){
       toggleSentence(idx, true);
-      unit = $('#article').querySelector(sel);
+      unit = findUnit();
     }
   }
   if(!unit){
@@ -2186,7 +2640,14 @@ async function explainWord(word, sent, force, sentObj){
     const user = fillPlaceholders(promptCfg.user, ctx);
     const raw = await callAPI([{role:'system', content:sys}, {role:'user', content:user}], {maxTokens:2048});
     const obj = parseJSON(raw);
-    saveCache(cacheKey, JSON.stringify(obj));
+    /* 只有「能用」的返回才写缓存。空对象或全是不认识字段的返回一旦写进去，
+       以后每次双击都直接读缓存显示「未获取到有效解析」，再也不会重新问 API。 */
+    const usable = obj && typeof obj === 'object' &&
+      (Array.isArray(obj) ? obj.length : Object.keys(obj).some(k => {
+        const v = obj[k];
+        return v != null && v !== '' && !(Array.isArray(v) && !v.length);
+      }));
+    if(usable) saveCache(cacheKey, JSON.stringify(obj));
     if(seq === explainSeq) renderWordModal(obj);
   }catch(err){
     if(seq === explainSeq) $('#wmBody').innerHTML = '<div class="wm-err">解析失败：' + esc(err.message) + '</div>';
@@ -2199,7 +2660,11 @@ const WM_FIELD_LABEL = {meaning:'语境含义', usage:'用法与搭配', example
                         synonyms:'近义词', collocation:'搭配', collocations:'搭配', note:'备注',
                         notes:'备注', etymology:'词源', memory:'记忆', mnemonic:'记忆', exam:'考点', tips:'提示'};
 function wmLabel(k){
-  return WM_FIELD_LABEL[k] || (k.charAt(0).toUpperCase() + k.slice(1));
+  /* 必须用 hasOwnProperty 判存在：直接 WM_FIELD_LABEL[k] 会命中原型链上的
+     constructor / toString / __proto__，把「function Object() {...}」渲染成小标题。 */
+  const key = String(k == null ? '' : k);
+  if(Object.prototype.hasOwnProperty.call(WM_FIELD_LABEL, key)) return WM_FIELD_LABEL[key];
+  return key.charAt(0).toUpperCase() + key.slice(1);
 }
 function wmRenderValue(val){
   if(val == null) return '';
@@ -2241,14 +2706,14 @@ function renderWordModal(obj){
   preferred.forEach(k => {
     if(obj[k] == null) return;
     done.add(k);
-    html += `<div class="wm-sec"><h4>${wmLabel(k)}</h4>${wmRenderValue(obj[k])}</div>`;
+    html += `<div class="wm-sec"><h4>${esc(wmLabel(k))}</h4>${wmRenderValue(obj[k])}</div>`;
   });
   Object.keys(obj).forEach(k => {
     if(done.has(k)) return;
     const v = obj[k];
     if(v == null || v === '') return;
     if(Array.isArray(v) && !v.length) return;
-    html += `<div class="wm-sec"><h4>${wmLabel(k)}</h4>${wmRenderValue(v)}</div>`;
+    html += `<div class="wm-sec"><h4>${esc(wmLabel(k))}</h4>${wmRenderValue(v)}</div>`;
   });
   $('#wmBody').innerHTML = html || '<div class="wm-err">未获取到有效解析</div>';
 }
@@ -2479,6 +2944,10 @@ applyFontPref();
 suppressAnim(() => applyModePref(hoverMode));   // 初始化同样不做补间，避免每次载入闪一下
 /* 每次打开页面先执行一次过期底线：超过 7 天未访问的缓存直接清掉 */
 try{
+  /* 先对账：清掉旧版本前缀的缓存、收编不在索引里的孤儿键，再做过期底线 */
+  const rec = reconcileCache();
+  if(rec.removed) console.info(`[长难句工具] 已清除 ${rec.removed} 条旧版本缓存`);
+  if(rec.adopted) console.info(`[长难句工具] 已收编 ${rec.adopted} 条不在索引里的缓存`);
   const cleaned = cleanupExpiredCache();
   if(cleaned.removed) console.info(`[长难句工具] 已自动清除 ${cleaned.removed} 条过期缓存（超过 ${CACHE_TTL_DAYS} 天未访问）`);
 }catch(_){}
