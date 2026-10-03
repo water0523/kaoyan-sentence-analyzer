@@ -223,6 +223,34 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
 /* 同位语从句：点划线（比状语的点线更粗 + 不同颜色，实测可辨） */
 .cl-appos{background-image:repeating-linear-gradient(90deg,#be185d 0 4px,transparent 4px 7px,#be185d 7px 8px,transparent 8px 12px);background-size:auto 1.5px}
 
+/* ---------- 语法精析（AI 输出的 Markdown） ---------- */
+.gram-host:empty{display:none}
+.gram-sec{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden;animation:fadeIn .3s var(--ease)}
+.gram-sec.folded .md-body{display:none}
+.gram-head{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#f8f7f4;border-bottom:1px solid var(--line);font-size:13px;font-weight:700;color:var(--ink2)}
+.gram-head>span{flex:1}
+.gram-loading{padding:16px 14px;color:#9aa0ab;font-size:13px}
+.gram-loading::after{content:'';display:block;height:3px;width:50%;margin:10px 0 0;border-radius:2px;background:linear-gradient(90deg,#efece6,#d97706,#efece6);background-size:200% 100%;animation:slide 1.2s linear infinite}
+.gram-err{padding:14px;color:#c23030;font-size:13px;line-height:1.7}
+.md-body{padding:6px 16px 14px;font-size:14px;line-height:1.8;color:var(--ink)}
+.md-body>.md-h:first-child{margin-top:10px}
+.md-h{margin:16px 0 6px;font-size:14.5px;font-weight:700;color:var(--accent);border-left:3px solid var(--accent);padding-left:8px}
+.md-p{margin:8px 0}
+.md-list{margin:8px 0 8px 20px}
+.md-list li{margin:3px 0}
+.md-quote{margin:10px 0;padding:8px 12px;border-left:3px solid var(--line);background:#fbfaf7;color:var(--ink2);font-size:13.5px}
+.md-hr{border:none;border-top:1px dashed var(--line);margin:14px 0}
+.md-code{margin:10px 0;padding:10px 12px;background:#f8f7f4;border-radius:8px;overflow-x:auto;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;line-height:1.6}
+.md-body code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#f1efeb;padding:1px 5px;border-radius:4px}
+.md-body strong{font-weight:700;color:var(--ink)}
+.md-table-wrap{margin:10px 0;overflow-x:auto}       /* 手机端表格可横向滚动 */
+.md-table{border-collapse:collapse;width:100%;font-size:13px}
+.md-table th,.md-table td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+.md-table th{background:#f8f7f4;font-weight:700;white-space:nowrap}
+.md-table td:first-child{white-space:nowrap;color:var(--accent);font-weight:600}
+/* 括号里的汉语释义：每个成分后面 (…) 里那截，弱化处理，读起来像批注 */
+.md-body .zh{color:#8a919e;font-size:.92em;font-style:normal}
+
 /* ---------- 侧栏词表 ---------- */
 .sidebar{position:sticky;top:142px}
 .side-card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
@@ -284,6 +312,10 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
 
 /* ---------- 提示词设置弹窗 ---------- */
 .prompt-modal{max-width:680px;position:relative}
+.pm-tabs{display:flex;gap:4px;margin:2px 0 10px;border-bottom:1px solid var(--line)}
+.pm-tabs button{padding:8px 14px;font-size:13.5px;color:var(--ink2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.pm-tabs button:hover{color:var(--ink)}
+.pm-tabs button.on{color:var(--accent);font-weight:700;border-bottom-color:var(--accent)}
 .prompt-modal .tt-close{position:absolute;top:14px;right:16px;color:#9aa0ab;font-size:15px}
 .prompt-modal textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 13px;font-size:13px;line-height:1.65;font-family:ui-monospace,Consolas,monospace;color:var(--ink);outline:none;resize:vertical;transition:border .16s,box-shadow .16s}
 .prompt-modal textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(180,89,10,.08)}
@@ -427,6 +459,12 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   body.mode-hover .trans{opacity:1!important;visibility:visible!important}
   /* 黄底主干与从句线都是 background 画的，Chrome 默认不打印背景 —— 不显式声明就会全丢 */
   .seg-wrap,.clause-wrap{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  /* 语法精析：打印时一律展开，按钮不印，表格保留边框 */
+  .gram-sec{border-color:#ddd}
+  .gram-sec.folded .md-body{display:block!important}
+  .gram-head .mini-btn{display:none!important}
+  .md-table th,.md-table td{border:1px solid #ccc}
+  .md-table th{background:#f2f2f2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sidebar{position:static;margin-top:30px}
   .side-cols{max-height:none;overflow:visible}
   .side-card{box-shadow:none}
@@ -530,7 +568,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
 
     <div class="empty-article" id="emptyArticle">
       <div class="big">📖</div>
-      <p>粘贴文章或上传图片，点击「开始分析」<br>AI 将通读全文断句，逐句划分句子成分、标注重难点词汇<br>点击句子可展开颜色标注与逐词翻译 · 双击任意单词查看 AI 详解</p>
+      <p>粘贴文章或上传图片，点击「开始分析」<br>AI 将通读全文断句，逐句划分句子成分、标注重难点词汇<br>点击句子可展开颜色标注与逐词翻译 · 双击任意单词查看 AI 详解<br>句子里还能点「语法精析」，让 AI 逐层拆解语法结构（可自定义提示词）</p>
     </div>
   </section>
 
@@ -569,8 +607,12 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
 <div class="modal-mask" id="promptModal">
   <div class="modal prompt-modal">
     <button class="tt-close" id="pmClose" aria-label="关闭">✕</button>
-    <h3>AI 解词提示词</h3>
-    <p>双击句子里的单词时，下面这段提示词会发给 AI。你可以按自己的需求改写，改完点保存即可，之后所有解词都用你的版本。</p>
+    <h3>AI 提示词设置</h3>
+    <div class="pm-tabs" id="pmTabs">
+      <button data-pm="word" class="on">解词提示词</button>
+      <button data-pm="grammar">语法精析提示词</button>
+    </div>
+    <p id="pmDesc"></p>
     <div class="prompt-field">
       <label>插入到光标处：<b>点击下面的占位符</b></label>
       <div class="ph-row" id="pmPhRow"></div>
@@ -649,9 +691,10 @@ const MAX_TOKENS = 16384;               // 单次请求最大输出（deepseek-f
 const REQ_TIMEOUT = 180000;             // 单次请求超时（毫秒）
 const CACHE_PRE = 'ds_ana_v6_';         // 缓存前缀（版本变更后旧缓存自动失效；v6：两层结构）
 const WORD_CACHE_PRE = 'ds_word_v3_';   // 解词缓存（v3：缓存键已带上提示词指纹）
+const GRAM_CACHE_PRE = 'ds_gram_v1_';   // 语法精析缓存（v1：缓存键已带上提示词指纹）
 /* 任意版本的缓存键：统计与「清空全部缓存」必须覆盖旧版本，否则升版后旧数据永远统计不到也清不掉 */
-const CACHE_KEY_RE = /^ds_(?:ana|word)_v\d+_/;
-const CACHE_CUR_PRE = [CACHE_PRE, WORD_CACHE_PRE];
+const CACHE_KEY_RE = /^ds_(?:ana|word|gram)_v\d+_/;
+const CACHE_CUR_PRE = [CACHE_PRE, WORD_CACHE_PRE, GRAM_CACHE_PRE];
 const INDEX_KEY = 'ds_cache_index';     // 统一缓存索引（分析 + 解词）：{k: 键, t: 最后访问时间}
 const MAX_CACHE_ENTRIES = 40;           // 索引最多保留的缓存条目数
 const CACHE_TTL_DAYS = 7;               // 底线：超过这个天数没被访问过的缓存直接清除
@@ -679,6 +722,36 @@ const WORD_PROMPT_DEFAULT = {
 {extra}
 
 {schema}`,
+  extra: ''
+};
+
+/* ---------- 语法精析：可自定义提示词 ----------
+   占位符：{sentence}=原句  {trans}=参考译文  {context}=所在段落  {extra}=用户额外要求
+   输出是 Markdown（不是 JSON），所以没有 {schema} 这个必需占位符。 */
+const GRAM_PLACEHOLDERS = ['sentence', 'trans', 'context', 'extra'];
+const GRAM_PROMPT_DEFAULT = {
+  system: '你是考研英语语法专家，擅长把长难句拆成「主句 — 从句 — 成分」三层。'
+        + '你只输出 Markdown 正文，不要任何前言、客套话，也不要用代码围栏把整篇包起来。',
+  user: `请对下面这个考研英语长难句做**逐层语法精析**。
+
+原句：{sentence}
+参考译文：{trans}
+所在段落：{context}
+
+{extra}
+
+输出要求（严格遵守）：
+1. 用 Markdown 组织，固定四个部分，标题逐字照抄：
+   ## 一、句子主干
+   ## 二、从句与层级
+   ## 三、成分拆解
+   ## 四、翻译与要点
+2. **每一处语法结构成分后面都必须用圆括号附上它的汉语意思**，例如：宾语从句 (他认为这件事很重要)、后置定语 (住在隔壁的)、时间状语 (当它第一次被提出时)。
+3. 「三、成分拆解」必须用 Markdown 表格，表头固定为：
+   | 层级 | 原文片段 | 成分 | 汉语意思 | 说明 |
+4. 层级用 L0 / L1 / L2 表示：L0 是主句，L1 是直接挂在主句下的从句，L2 再往里一层。
+5. 「原文片段」必须与原句逐字符一致，不要改写、不要省略中间的词。
+6. 不要整句重复抄译文，不要写「希望对你有帮助」之类的空话。`,
   extra: ''
 };
 
@@ -1662,7 +1735,7 @@ async function analyze(force){
 
     state.sentences = [];
     paras.forEach((p, pi) => p.forEach(t => {
-      state.sentences.push({text:t, data:null, status:'pending', para:pi, error:''});
+      state.sentences.push({text:t, data:null, status:'pending', para:pi, error:'', grammar:null});
     }));
     rebuildParagraphs();
     renderArticleSkeleton();
@@ -1720,7 +1793,8 @@ function loadResult(sentArr){
     data: s?.data || null,
     status: s?.data ? 'ok' : 'pending',
     para: Math.max(0, Number(s?.para) || 0),
-    error: ''
+    error: '',
+    grammar: null
   }));
   rebuildParagraphs();
   state.hasResult = true;
@@ -1981,22 +2055,32 @@ function alignSegments(sent, segments, tokens){
   /* 按 token 边界把区间切成互不重叠、首尾相连的小块 */
   const out = [];
   let pos = 0;
+  /* 模型偶尔会漏掉一两个词，中间就留下空隙。以前一律补成 other，
+     于是被漏掉的词会突然变成灰色/正文色，看起来「这个词怎么灰了」。
+     这里改成：空隙里只要含字母数字，就沿用上一段的成分类型
+     （成分本来就连着，漏词不该让它换色）；只有纯标点/空格的空隙才保持 other。 */
+  let prevType = '';
+  const filler = (a, b) => {
+    const hasWord = /[A-Za-z0-9]/.test(sent.slice(a, b));
+    return {start:a, end:b, type:(hasWord && prevType) ? prevType : 'other', rawType:'', note:''};
+  };
   for(const it of items){
     if(it.end <= pos) continue;
     const s0 = Math.max(pos, it.start);
     const end = Math.max(s0, Math.min(sent.length, it.end));
-    if(s0 > pos) out.push({start:pos, end:s0, type:'other', rawType:'', note:''});
+    if(s0 > pos) out.push(filler(pos, s0));
     let p = s0;
     for(const tk of tokens){
       if(tk.end <= p || tk.start >= end) continue;
       const a = Math.max(p, tk.start), b = Math.min(tk.end, end);
       if(a >= b) continue;
-      if(a > p) out.push({start:p, end:a, type:'other', rawType:'', note:''});
+      if(a > p) out.push(filler(p, a));
       out.push({start:a, end:b, type:it.type, rawType:it.rawType, note:it.note});
       p = b;
     }
     if(p < end) out.push({start:p, end:end, type:it.type, rawType:it.rawType, note:it.note});
     pos = Math.max(pos, end);
+    prevType = it.type;
   }
   if(pos < sent.length) out.push({start:pos, end:sent.length, type:'other', rawType:'', note:''});
 
@@ -2292,8 +2376,11 @@ function buildDetailHTML(s, withTitle = false){
     let wInner = esc(headText);
     if(trailing.length){
       if(g){
-        /* 整条词条（含尾标点）作为一个整体，统一的符号样式 */
-        wInner = `<span class="unit-sym"${symStyle}>${esc(display)}</span>`;
+        /* 整条词条（含尾标点）作为一个整体，统一的符号样式。
+           这里必须跟上面一样用 colored 判断：other 类型不给它强行上灰，
+           否则同一个词「带词条时发灰、不带词条时是正文色」，
+           看起来就像出了 bug（实测就是这样被发现的）。 */
+        wInner = `<span class="unit-sym"${colored ? symStyle : ''}>${esc(display)}</span>`;
       }else{
         wInner += esc(sent.slice(headEnd, trailing[0].start));
         trailing.forEach((tk2, n) => {
@@ -2368,14 +2455,147 @@ function buildTransHTML(s){
   return `<div class="trans" role="button" tabindex="0" title="点击复制译文"><span class="trans-tag">译文</span>${esc(t)}</div>`;
 }
 
-/* 完整详情 = 逐词标注 + 整句翻译 */
+/* ============================================================
+   极简 Markdown 渲染
+   零依赖所以要自己实现，只覆盖语法精析用得到的子集：
+   标题 / 段落 / 粗斜体 / 行内代码 / 代码块 / 有序无序列表 / 引用 / 分隔线 / 表格。
+   安全策略：**先把整段文本做 HTML 转义，再套标签**，所以 AI 返回里的任何
+   <script>、onerror= 之类都只会变成可见文字，不可能执行。
+   ============================================================ */
+function renderMarkdown(md){
+  const E = s => esc(String(s == null ? '' : s));
+  const inline = t => {
+    let s = E(t);
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/(^|[^*\w])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+    s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+    /* 括号里的汉语释义单独标出来：只有括号内含中文才处理，英文括号不受影响。
+       这正是提示词要求「每个成分后面用 () 附汉语翻译」的落点。 */
+    s = s.replace(/[（(]\s*([^（）()]*[\u4e00-\u9fa5][^（）()]*?)\s*[）)]/g, '<span class="zh">（$1）</span>');
+    return s;
+  };
+  const lines = String(md == null ? '' : md).replace(/\r/g, '').split('\n');
+  const out = [];
+  const isSep = s => /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(s);
+  const cells = s => s.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(x => x.trim());
+  const isBlockStart = s =>
+    /^(#{1,4})\s/.test(s) || /^```/.test(s) || /^>\s?/.test(s) ||
+    /^([-*+]|\d+\.)\s+/.test(s) || /^(-{3,}|\*{3,}|_{3,})$/.test(s);
+  let i = 0;
+  while(i < lines.length){
+    const line = lines[i].trim();
+    if(!line){ i++; continue; }
+    /* 代码块 */
+    if(/^```/.test(line)){
+      const buf = []; i++;
+      while(i < lines.length && !/^```/.test(lines[i].trim())){ buf.push(lines[i]); i++; }
+      i++;
+      out.push('<pre class="md-code"><code>' + E(buf.join('\n')) + '</code></pre>');
+      continue;
+    }
+    /* 标题：整体降两级，避免和面板标题抢层级 */
+    const h = /^(#{1,4})\s+(.*)$/.exec(line);
+    if(h){
+      const lv = Math.min(6, h[1].length + 2);
+      out.push('<h' + lv + ' class="md-h">' + inline(h[2]) + '</h' + lv + '>');
+      i++; continue;
+    }
+    /* 分隔线 */
+    if(/^(-{3,}|\*{3,}|_{3,})$/.test(line)){ out.push('<hr class="md-hr">'); i++; continue; }
+    /* 表格：当前行含 | 且下一行是分隔行 */
+    if(line.includes('|') && i + 1 < lines.length && isSep(lines[i+1])){
+      const head = cells(line); i += 2;
+      const rows = [];
+      while(i < lines.length && lines[i].trim().includes('|')){ rows.push(cells(lines[i])); i++; }
+      out.push('<div class="md-table-wrap"><table class="md-table"><thead><tr>' +
+        head.map(c => '<th>' + inline(c) + '</th>').join('') +
+        '</tr></thead><tbody>' +
+        rows.map(r => '<tr>' + head.map((_, k) => '<td>' + inline(r[k] || '') + '</td>').join('') + '</tr>').join('') +
+        '</tbody></table></div>');
+      continue;
+    }
+    /* 引用 */
+    if(/^>\s?/.test(line)){
+      const buf = [];
+      while(i < lines.length && /^>\s?/.test(lines[i].trim())){ buf.push(lines[i].trim().replace(/^>\s?/, '')); i++; }
+      out.push('<blockquote class="md-quote">' + inline(buf.join(' ')) + '</blockquote>');
+      continue;
+    }
+    /* 列表 */
+    if(/^([-*+]|\d+\.)\s+/.test(line)){
+      const ordered = /^\d+\./.test(line);
+      const items = [];
+      while(i < lines.length){
+        const cur = lines[i].trim();
+        const m = ordered ? /^\d+\.\s+(.*)$/.exec(cur) : /^[-*+]\s+(.*)$/.exec(cur);
+        if(!m) break;
+        items.push(m[1]); i++;
+      }
+      const tag = ordered ? 'ol' : 'ul';
+      out.push('<' + tag + ' class="md-list">' + items.map(x => '<li>' + inline(x) + '</li>').join('') + '</' + tag + '>');
+      continue;
+    }
+    /* 段落：连续非空行合并，内部换行用 <br> */
+    const buf = [];
+    while(i < lines.length){
+      const cur = lines[i].trim();
+      if(!cur) break;
+      if(isBlockStart(cur)) break;
+      if(cur.includes('|') && i + 1 < lines.length && isSep(lines[i+1])) break;
+      buf.push(cur); i++;
+    }
+    if(buf.length) out.push('<p class="md-p">' + buf.map(inline).join('<br>') + '</p>');
+    else i++;   // 兜底防死循环
+  }
+  return out.join('');
+}
+
+/* ============================================================
+   语法精析（AI 逐层拆解，Markdown 输出）
+   ============================================================ */
+function grammarCacheKey(sent){
+  return GRAM_CACHE_PRE + cyrb53(MODEL + '|' + sent + '|' + gramPromptFingerprint(gramPromptCfg));
+}
+function buildGrammarHTML(s){
+  const idx = state.sentences.indexOf(s);
+  const g = s.grammar;
+  if(!g || g.status === 'idle') return '';
+  if(g.status === 'loading'){
+    return '<div class="gram-sec"><div class="gram-loading">AI 正在逐层拆解这句话的语法结构…</div></div>';
+  }
+  if(g.status === 'error'){
+    return '<div class="gram-sec"><div class="gram-err">语法精析失败：' + esc(g.error || '未知错误') +
+      ` <button class="mini-btn" data-gram-retry="${idx}">重试</button></div></div>`;
+  }
+  return '<div class="gram-sec">' +
+    '<div class="gram-head"><span>语法精析</span>' +
+    `<button class="mini-btn" data-gram-refresh="${idx}">重新生成</button>` +
+    `<button class="mini-btn" data-gram-fold="${idx}">收起</button></div>` +
+    '<div class="md md-body">' + renderMarkdown(g.md) + '</div></div>';
+}
+/* 只替换语法精析那一块，不做整句重建（否则会丢掉折叠状态和滚动位置） */
+function paintGrammar(idx){
+  const el = $('#article').querySelector(`.p-sent[data-idx="${idx}"] .gram-host`);
+  if(!el) return;
+  const s = state.sentences[idx];
+  if(!s) return;
+  el.innerHTML = buildGrammarHTML(s);
+  bindGrammarEvents(el, idx);
+}
+
+/* 完整详情 = 逐词标注 + 整句翻译 + 语法精析 + 工具条 */
 function buildFullDetailHTML(s, withTitle = false){
+  const idx = state.sentences.indexOf(s);
+  const hasGram = !!(s.grammar && s.grammar.status === 'ok');
   const tools = '<div class="detail-tools">' +
+    `<button class="mini-btn" data-gram-run="${idx}">${hasGram ? '语法精析 ✓' : '语法精析'}</button>` +
     `<button class="mini-btn" data-collapse-sent="1">收起本句</button>` +
-    `<button class="mini-btn" data-copy-sent="${state.sentences.indexOf(s)}">复制原句</button>` +
-    `<button class="mini-btn" data-copy-trans="${state.sentences.indexOf(s)}">复制译文</button>` +
+    `<button class="mini-btn" data-copy-sent="${idx}">复制原句</button>` +
+    `<button class="mini-btn" data-copy-trans="${idx}">复制译文</button>` +
     '</div>';
-  return buildDetailHTML(s, withTitle) + buildTransHTML(s) + tools;
+  return buildDetailHTML(s, withTitle) + buildTransHTML(s) +
+    `<div class="gram-host" data-gram-host="${idx}">` + buildGrammarHTML(s) + '</div>' + tools;
 }
 
 /* ============================================================
@@ -2485,6 +2705,26 @@ function bindDetailEvents(detail, idx){
     const el = detail.closest('.p-sent');
     if(el) el.classList.remove('open');
   });
+  // 语法精析：工具条上的按钮负责「开始 / 跳到结果」
+  detail.querySelectorAll('[data-gram-run]').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const s = state.sentences[idx];
+      if(!s) return;
+      if(s.grammar && s.grammar.status === 'ok'){
+        const sec = detail.querySelector('.gram-sec');       // 已生成过 → 滚过去并展开
+        if(sec){
+          sec.classList.remove('folded');
+          const fold = sec.querySelector('[data-gram-fold]');
+          if(fold) fold.textContent = '收起';
+          sec.scrollIntoView({block:'center', behavior:'smooth'});
+        }
+      }else{
+        explainGrammar(s, false);
+      }
+    });
+  });
+  bindGrammarEvents(detail, idx);
 }
 document.addEventListener('scroll', clearPick, true);
 document.addEventListener('keydown', e => {
@@ -2589,6 +2829,26 @@ function promptFingerprint(cfg){
   return cyrb53(MODEL + '|' + cfg.system + '|' + cfg.user + '|' + cfg.extra);
 }
 
+/* ---------- 语法精析提示词的读写（与解词提示词同一套机制） ---------- */
+function loadGramPromptCfg(){
+  let saved = null;
+  try{ saved = JSON.parse(localStorage.getItem('ds_gram_prompt') || 'null'); }catch(_){}
+  return {
+    system: (saved && typeof saved.system === 'string') ? saved.system : GRAM_PROMPT_DEFAULT.system,
+    user:   (saved && typeof saved.user === 'string' && saved.user.trim()) ? saved.user : GRAM_PROMPT_DEFAULT.user,
+    extra:  (saved && typeof saved.extra === 'string') ? saved.extra : ''
+  };
+}
+let gramPromptCfg = loadGramPromptCfg();
+function gramPromptIsDefault(){
+  return gramPromptCfg.system === GRAM_PROMPT_DEFAULT.system &&
+         gramPromptCfg.user === GRAM_PROMPT_DEFAULT.user &&
+         gramPromptCfg.extra === GRAM_PROMPT_DEFAULT.extra;
+}
+function gramPromptFingerprint(cfg){
+  return cyrb53(MODEL + '|grammar|' + cfg.system + '|' + cfg.user + '|' + cfg.extra);
+}
+
 /* ---------- 占位符填充 ---------- */
 function buildWordContext(word, sent, sentObj){
   const ctx = {word: word, sentence: sent || '（无上下文）', trans: '（暂无）', context: '（无上下文）', extra: promptCfg.extra || '', schema: WORD_JSON_SCHEMA};
@@ -2613,6 +2873,13 @@ function promptIssues(userTpl){
   if(!userTpl || !userTpl.trim()) out.push('用户提示词不能为空');
   if(!/\{word\}/.test(userTpl || '')) out.push('缺少 {word}，AI 不知道要讲哪个词');
   if(!/\{schema\}/.test(userTpl || '')) out.push('缺少 {schema}，返回格式会不对，解析会失败');
+  return out;
+}
+/* 语法精析返回的是 Markdown（不是 JSON），所以只要求 {sentence} */
+function gramPromptIssues(userTpl){
+  const out = [];
+  if(!userTpl || !userTpl.trim()) out.push('用户提示词不能为空');
+  if(!/\{sentence\}/.test(userTpl || '')) out.push('缺少 {sentence}，AI 不知道要分析哪一句');
   return out;
 }
 
@@ -2739,6 +3006,86 @@ function renderWordModal(obj){
   });
   $('#wmBody').innerHTML = html || '<div class="wm-err">未获取到有效解析</div>';
 }
+
+/* ============================================================
+   语法精析：调用 AI 逐层拆解 + 缓存 + 局部渲染
+   ============================================================ */
+const gramSeq = new WeakMap();      // 每句一个序号，避免旧请求覆盖新结果
+
+async function explainGrammar(s, force){
+  const idx = state.sentences.indexOf(s);
+  if(idx < 0) return;
+  if(!requireKey()) return;
+  const sent = String(s.text || '').trim();
+  if(!sent) return;
+  const cacheKey = grammarCacheKey(sent);
+  const mySeq = (gramSeq.get(s) || 0) + 1;
+  gramSeq.set(s, mySeq);
+
+  if(!force){
+    let cached = null;
+    try{ cached = localStorage.getItem(cacheKey); }catch(_){}
+    if(cached){
+      try{
+        const obj = JSON.parse(cached);
+        if(obj && typeof obj.md === 'string' && obj.md.trim()){
+          s.grammar = {status:'ok', md: obj.md, error:''};
+          paintGrammar(idx);
+          touchCacheIndex(cacheKey);
+          refreshCacheBtn();
+          setStatus('语法精析已命中本地缓存，未消耗 API 额度', 'ok');
+          return;
+        }
+      }catch(_){ try{ localStorage.removeItem(cacheKey); }catch(__){} }
+    }
+  }
+
+  s.grammar = {status:'loading', md:'', error:''};
+  paintGrammar(idx);
+  const host = $('#article').querySelector(`.p-sent[data-idx="${idx}"]`);
+  if(host) host.classList.add('open');
+  try{
+    const sentObj = s;
+    const ctx = buildWordContext('', sent, sentObj);
+    ctx.sentence = sent;
+    ctx.extra = gramPromptCfg.extra || '';
+    const sys = gramPromptCfg.system || GRAM_PROMPT_DEFAULT.system;
+    const user = fillPlaceholders(gramPromptCfg.user, ctx);
+    const raw = await callAPI([{role:'system', content:sys}, {role:'user', content:user}], {json:false, maxTokens:4096});
+    const md = String(raw || '').trim();
+    if(!md) throw new Error('返回内容为空');
+    if(gramSeq.get(s) !== mySeq) return;              // 期间又发了新请求，丢弃这次结果
+    s.grammar = {status:'ok', md, error:''};
+    paintGrammar(idx);
+    saveCache(cacheKey, JSON.stringify({v:1, md}));
+    setStatus('语法精析完成', 'ok');
+  }catch(err){
+    if(gramSeq.get(s) !== mySeq) return;
+    s.grammar = {status:'error', md:'', error:(err && err.message) || String(err)};
+    paintGrammar(idx);
+    setStatus('语法精析失败：' + s.grammar.error, 'err');
+  }
+}
+
+/* 语法精析区内部的按钮（重试 / 重新生成 / 收起），只绑这一小块 */
+function bindGrammarEvents(scope, idx){
+  const s = state.sentences[idx];
+  scope.querySelectorAll('[data-gram-retry]').forEach(b => {
+    b.onclick = e => { e.stopPropagation(); explainGrammar(s, true); };
+  });
+  scope.querySelectorAll('[data-gram-refresh]').forEach(b => {
+    b.onclick = e => { e.stopPropagation(); explainGrammar(s, true); };
+  });
+  scope.querySelectorAll('[data-gram-fold]').forEach(b => {
+    b.onclick = e => {
+      e.stopPropagation();
+      const sec = scope.querySelector('.gram-sec');
+      if(!sec) return;
+      const hid = sec.classList.toggle('folded');
+      b.textContent = hid ? '展开' : '收起';
+    };
+  });
+}
 </script>
 
 <script>
@@ -2798,14 +3145,33 @@ $$('#modeToggle button').forEach(b => {
 });
 
 /* ============================================================
-   AI 解词提示词设置（UI 绑定）
+   AI 提示词设置（UI 绑定）
+   同一个弹窗里用 tab 切换两套提示词：解词 / 语法精析。
    ============================================================ */
 const PH_LABEL = {word:'{word} 当前单词', sentence:'{sentence} 所在句子', trans:'{trans} 该句译文',
                   context:'{context} 所在段落', extra:'{extra} 额外要求(上方)', schema:'{schema} 输出格式(必需)'};
+let pmTab = 'word';                 // 'word' | 'grammar'
+const PM_TAB_META = {
+  word: {
+    desc: '双击句子里的单词时，下面这段提示词会发给 AI，要求它返回 JSON。改完点保存，之后所有解词都用你的版本。',
+    placeholders: () => WORD_PLACEHOLDERS,
+    defaults: () => WORD_PROMPT_DEFAULT,
+    cfg: () => promptCfg,
+    issues: tpl => promptIssues(tpl)
+  },
+  grammar: {
+    desc: '点句子里的「语法精析」时，下面这段提示词会发给 AI，要求它返回 Markdown 的逐层语法拆解（每处成分后面用 () 附汉语意思）。',
+    placeholders: () => GRAM_PLACEHOLDERS,
+    defaults: () => GRAM_PROMPT_DEFAULT,
+    cfg: () => gramPromptCfg,
+    issues: tpl => gramPromptIssues(tpl)
+  }
+};
 
 function renderPhChips(){
+  const meta = PM_TAB_META[pmTab];
   const row = $('#pmPhRow');
-  row.innerHTML = WORD_PLACEHOLDERS.map(k =>
+  row.innerHTML = meta.placeholders().map(k =>
     `<span class="ph-chip${k === 'schema' ? ' locked' : ''}" data-ph="${k}" title="${k === 'schema' ? '输出格式，必须保留在提示词里' : '点击插入到光标处'}">${PH_LABEL[k]}</span>`
   ).join('');
   row.querySelectorAll('.ph-chip').forEach(c => {
@@ -2828,30 +3194,52 @@ function renderPhChips(){
   });
 }
 function updatePromptPreview(){
+  const meta = PM_TAB_META[pmTab];
   const fake = {word:'abandon', sentence:'He abandoned his car in the snow.',
                 trans:'他把车丢在了雪地里。', context:'He abandoned his car in the snow and walked home.',
                 extra:$('#pfExtra').value.trim(), schema:WORD_JSON_SCHEMA};
   const user = fillPlaceholders($('#pfUser').value, fake);
   const sys = $('#pfSystem').value.trim();
-  const issues = promptIssues($('#pfUser').value);
+  const issues = meta.issues($('#pfUser').value);
   const warn = $('#pfWarn');
   warn.className = 'prompt-note' + (issues.length ? ' warn' : '');
   warn.textContent = issues.length ? '⚠ ' + issues.join('；') : '✓ 提示词完整，可以保存';
   $('#pmSave').disabled = issues.length > 0;
   $('#pfPreview').textContent = (sys ? '【system】\n' + sys + '\n\n' : '') + '【user】\n' + (user.trim() || '（空）');
 }
-function openPromptModal(){
-  $('#pfUser').value = promptCfg.user;
-  $('#pfSystem').value = promptCfg.system;
-  $('#pfExtra').value = promptCfg.extra;
+/* 把当前 tab 的配置读进表单 */
+function loadPmForm(){
+  const meta = PM_TAB_META[pmTab];
+  const cfg = meta.cfg();
+  $('#pmDesc').textContent = meta.desc;
+  $('#pfUser').value = cfg.user;
+  $('#pfSystem').value = cfg.system;
+  $('#pfExtra').value = cfg.extra;
+  $$('#pmTabs button').forEach(b => b.classList.toggle('on', b.dataset.pm === pmTab));
   renderPhChips();
   updatePromptPreview();
+}
+function openPromptModal(tab){
+  pmTab = (tab === 'grammar') ? 'grammar' : 'word';
+  loadPmForm();
   $('#promptModal').classList.add('show');
   later(() => $('#pfUser').focus(), 60);
 }
 /* 顶栏那个齿轮按钮的绑定必须放在这里：block2 里 openPromptModal 还没定义 */
-$('#promptBtn').onclick = openPromptModal;
-$('#wmEditPrompt').onclick = () => { $('#wordModal').classList.remove('show'); openPromptModal(); };
+$('#promptBtn').onclick = () => openPromptModal('word');
+$('#wmEditPrompt').onclick = () => { $('#wordModal').classList.remove('show'); openPromptModal('word'); };
+$$('#pmTabs button').forEach(b => {
+  b.onclick = () => {
+    /* 切 tab 前先把当前这一套的编辑内容存进内存，避免用户来回切换时丢失 */
+    const meta = PM_TAB_META[pmTab];
+    const cfg = meta.cfg();
+    cfg.system = $('#pfSystem').value;
+    cfg.user = $('#pfUser').value;
+    cfg.extra = $('#pfExtra').value;
+    pmTab = b.dataset.pm === 'grammar' ? 'grammar' : 'word';
+    loadPmForm();
+  };
+});
 $('#pmClose').onclick = () => $('#promptModal').classList.remove('show');
 $('#pmCancel').onclick = () => $('#promptModal').classList.remove('show');
 $('#promptModal').addEventListener('click', e => { if(e.target.id === 'promptModal') $('#promptModal').classList.remove('show'); });
@@ -2859,20 +3247,32 @@ $('#pfUser').addEventListener('input', updatePromptPreview);
 $('#pfExtra').addEventListener('input', updatePromptPreview);
 $('#pfSystem').addEventListener('input', updatePromptPreview);
 $('#pmReset').onclick = () => {
+  const d = PM_TAB_META[pmTab].defaults();
   if(!confirm('恢复为默认提示词？（你自己改的内容会丢失）')) return;
-  $('#pfUser').value = WORD_PROMPT_DEFAULT.user;
-  $('#pfSystem').value = WORD_PROMPT_DEFAULT.system;
-  $('#pfExtra').value = WORD_PROMPT_DEFAULT.extra;
+  $('#pfUser').value = d.user;
+  $('#pfSystem').value = d.system;
+  $('#pfExtra').value = d.extra;
   updatePromptPreview();
 };
 $('#pmSave').onclick = () => {
-  const issues = promptIssues($('#pfUser').value);
+  const meta = PM_TAB_META[pmTab];
+  const d = meta.defaults();
+  const issues = meta.issues($('#pfUser').value);
   if(issues.length){ alert('提示词不完整：' + issues.join('；')); return; }
-  promptCfg = {system:$('#pfSystem').value.trim() || WORD_PROMPT_DEFAULT.system,
-               user:$('#pfUser').value, extra:$('#pfExtra').value.trim()};
-  try{ localStorage.setItem('ds_word_prompt', JSON.stringify(promptCfg)); }catch(_){}
-  $('#promptModal').classList.remove('show');
-  setStatus(promptIsDefault() ? '已恢复默认提示词' : '已保存你的提示词，之后解词都用它', 'ok');
+  const next = {system:$('#pfSystem').value.trim() || d.system,
+                user:$('#pfUser').value,
+                extra:$('#pfExtra').value.trim()};
+  if(pmTab === 'grammar'){
+    gramPromptCfg = next;
+    try{ localStorage.setItem('ds_gram_prompt', JSON.stringify(gramPromptCfg)); }catch(_){}
+    $('#promptModal').classList.remove('show');
+    setStatus(gramPromptIsDefault() ? '语法精析已恢复默认提示词' : '已保存语法精析提示词', 'ok');
+  }else{
+    promptCfg = next;
+    try{ localStorage.setItem('ds_word_prompt', JSON.stringify(promptCfg)); }catch(_){}
+    $('#promptModal').classList.remove('show');
+    setStatus(promptIsDefault() ? '已恢复默认提示词' : '已保存你的提示词，之后解词都用它', 'ok');
+  }
 };
 
 /* ============================================================
