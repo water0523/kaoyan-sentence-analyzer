@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<title>考研英语长难句分析工具 · DeepSeek</title>
+<title>考研英语长难句分析工具 v1.2 · DeepSeek</title>
 <style>
 :root{
   --ink:#1c2333; --ink2:#5b6472; --line:#e8e6e1; --bg:#faf9f7; --card:#ffffff;
@@ -30,6 +30,9 @@ body.font-sans .annotated{font-family:-apple-system,BlinkMacSystemFont,"PingFang
 .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;letter-spacing:.2px;white-space:nowrap;flex:0 0 auto}
 .logo-mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#b4590a,#d97706);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800;font-family:Georgia,serif;flex:0 0 auto}
 .logo small{font-weight:400;color:var(--ink2);font-size:12px;margin-left:2px}
+/* 版本号：顶栏一个小徽标，footer 里也写一份，方便用户看图报 bug */
+.ver{font-size:10.5px;font-weight:600;color:#b0a08a;background:#f6f3ee;border:1px solid var(--line);
+  border-radius:20px;padding:1px 7px;margin-left:6px;letter-spacing:.3px;flex:0 0 auto}
 .topbar-actions{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 13px;border-radius:8px;font-size:13px;color:var(--ink2);border:1px solid var(--line);background:#fff;transition:transform .14s var(--ease),background .16s,border-color .16s,color .16s,box-shadow .16s;white-space:nowrap}
 .btn:hover{border-color:#d0ccc4;color:var(--ink);background:#fbfaf8;transform:translateY(-1px)}
@@ -365,6 +368,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   #modeToggle{display:none}
   #transBtn,#glossBtn,#fontBtn,#printBtn,#cacheBtn,#promptBtn{display:none}
   .more-wrap{display:block}
+  .ver{display:none}          /* 窄屏顶栏要留给按钮，版本号只在页脚显示 */
 }
 
 /* 平板：收紧留白与字号 */
@@ -479,7 +483,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
 
 <header class="topbar">
   <div class="topbar-inner">
-    <div class="logo"><span class="logo-mark">句</span>长难句分析<small id="modelTag">DeepSeek</small></div>
+    <div class="logo"><span class="logo-mark">句</span>长难句分析<small id="modelTag">DeepSeek</small><span class="ver" id="verTag"></span></div>
     <div class="topbar-actions">
       <div class="seg-toggle" id="modeToggle" title="翻译显示模式：始终显示 / 悬停才显示">
         <button data-mode="always" class="on">始终显示翻译</button>
@@ -589,7 +593,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   </aside>
 </main>
 
-<div class="footer-note">本工具在浏览器本地运行，API Key 与分析缓存仅存储于你的浏览器 localStorage</div>
+<div class="footer-note">本工具在浏览器本地运行，API Key 与分析缓存仅存储于你的浏览器 localStorage · 版本 <b id="verFoot"></b></div>
 
 <div class="modal-mask" id="wordModal">
   <div class="modal word-modal">
@@ -683,6 +687,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
    常量与配置
    ============================================================ */
 const API_URL = 'https://api.deepseek.com/chat/completions';
+const APP_VERSION = '1.2';              // 版本号：顶栏徽标 / 页脚 / README 保持一致
 const MODEL   = 'deepseek-flash';       // 官方模型名（旧名 deepseek-v4-flash 已下线）
 const MODEL_LABEL = 'DeepSeek V4.1 Flash';
 const BATCH_SIZE = 5;                   // 每批句子数
@@ -3359,6 +3364,8 @@ if(!restore('ds_pref_font', null)) fontMode = 'prose';
    初始化
    ============================================================ */
 $('#modelTag').textContent = MODEL_LABEL;
+$('#verTag').textContent = 'v' + APP_VERSION;
+$('#verFoot').textContent = 'v' + APP_VERSION;
 renderLegend();
 applyTransPref();
 applyGlossPref();
