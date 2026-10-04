@@ -6,20 +6,26 @@
    Copyright (c) 2025 Linwei
 
    用法：
-     node tools/build-dict.js <ecdict.csv 路径> [--inject <index.html>] [--out <base64 文件>]
+     node tools/build-dict.js <ecdict.csv 路径> [--inject <index.html>] [--out <base64 文件>] [--freq-top N]
 
-   裁剪口径（实测「学习者会去点的难词」查得率 96.5%，详见 README）：
-     frq 词频前 20000  ∪  带任一考试标签（ky/cet4/cet6/toefl/ielts/gre/gk）
+   裁剪口径：
+     frq 词频前 N 名  ∪  带任一考试标签（ky/cet4/cet6/toefl/ielts/gre/gk）
 
-   输出编码（记录间用 \n，字段间用 \x01）：
-     word \x01 translation \x01 phonetic \x01 tag \x01 exchange
+   ⚠ N 怎么选（实测数据）：
+     所有带考试标签的词本来就已经在里面了，所以调大 N 加进来的几乎全是
+     「不在任何考试大纲里」的词 —— 化学/医药术语、生僻词、人名地名。
+       N=20000  → 23,198 词，gzip 1.0MB，难词查得率 97.0%
+       N=120000 → 120,893 词，gzip 3.4MB，难词查得率 98.3%
+       N=全部   → 400,847 词，gzip 9.8MB，难词查得率 100%
+     想把查得率再抬上去，优先加「查词兜底规则」（英式拼写 / 连字符拆词 / 缩写，
+     见 index.html 里的 BRIT_RULES / CONTRACT_MAP），那是零体积的收益。
    ============================================================ */
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const FREQ_TOP = 20000;
+let FREQ_TOP = 120000;
 const EXAM_TAGS = ['ky', 'cet4', 'cet6', 'toefl', 'ielts', 'gre', 'gk'];
 const SEP = '\u0001';
 const START = '<!-- ECDICT_DATA_START -->';
@@ -150,13 +156,19 @@ function main() {
   const argv = process.argv.slice(2);
   const csvPath = argv[0];
   if (!csvPath) {
-    console.error('用法: node tools/build-dict.js <ecdict.csv> [--inject index.html] [--out file]');
+    console.error('用法: node tools/build-dict.js <ecdict.csv> [--inject index.html] [--out file] [--freq-top N]');
     process.exit(2);
   }
   const injIdx = argv.indexOf('--inject');
   const outIdx = argv.indexOf('--out');
+  const ftIdx = argv.indexOf('--freq-top');
   const htmlPath = injIdx >= 0 ? argv[injIdx + 1] : null;
   const outPath = outIdx >= 0 ? argv[outIdx + 1] : null;
+  if (ftIdx >= 0) {
+    const n = parseInt(argv[ftIdx + 1], 10);
+    if (!(n > 0)) { console.error('--freq-top 需要一个正整数'); process.exit(2); }
+    FREQ_TOP = n;
+  }
 
   console.log('读取 ' + csvPath + ' …');
   const { rows, stats } = build(csvPath);
