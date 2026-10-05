@@ -561,9 +561,12 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
 .image-modal img{display:block;max-width:100%;height:auto;margin:auto}
 #imgList.img-list{display:block}
 @media(max-width:900px){#bookBtn,#usageBtn{display:none}.book-layout{grid-template-columns:minmax(0,1fr);gap:12px}#bookFolders{flex-direction:row;flex-wrap:wrap}.folder-btn{padding:7px 10px}.study-modal{padding:22px 16px}.ocr-page{grid-template-columns:minmax(0,1fr);gap:10px}.ocr-preview{max-width:100%}.image-zoom img{max-height:150px}.study-actions{gap:6px}.study-table th,.study-table td{padding:7px}}
-@media print{#cancelBtn,#bookModal,#usageModal,#imageModal{display:none!important}}
+@media print{#cancelBtn,#bookModal,#usageModal,#imageModal,#lookupModal{display:none!important}}
 /* Keep the added tools reachable before the full desktop toolbar stops fitting. */
-@media(max-width:1160px){#modeToggle,#transBtn,#glossBtn,#fontBtn,#printBtn,#cacheBtn,#promptBtn,#bookBtn,#usageBtn{display:none}.more-wrap{display:block}.ver{display:none}}
+@media(max-width:1280px){#modeToggle,#transBtn,#glossBtn,#fontBtn,#printBtn,#cacheBtn,#promptBtn,#bookBtn,#usageBtn,#lookupBtn{display:none}.more-wrap{display:block}.ver{display:none}}
+.lookup-form{display:flex;gap:8px;margin:18px 0}.lookup-form input{flex:1;min-width:0;width:100%;box-sizing:border-box}
+#lookupResult{line-height:1.65;overflow-wrap:anywhere}#lookupResult:not(:empty){border-top:1px solid var(--line);padding-top:18px}
+#lookupResult .dc-head{flex-wrap:wrap}#lookupResult .dc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
 
 </style>
 </head>
@@ -585,6 +588,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
       <button class="btn ico" id="printBtn" title="打印 / 导出 PDF" disabled>⎙</button>
       <button class="btn ico" id="cacheBtn" title="清除缓存"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M10 11v7M14 11v7"/></svg></button>
       <button class="btn ico" id="promptBtn" title="AI 解词提示词设置"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .33 1.76l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.76-.33 1.6 1.6 0 0 0-1 1.47V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.47 1.6 1.6 0 0 0-1.76.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .33-1.76 1.6 1.6 0 0 0-1.47-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.47-1 1.6 1.6 0 0 0-.33-1.76l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.6 1.6 0 0 0 1.76.33H9a1.6 1.6 0 0 0 1-1.47V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.47 1.6 1.6 0 0 0 1.76-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.33 1.76V9a1.6 1.6 0 0 0 1.47 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.47 1z"/></svg></button>
+      <button class="btn" id="lookupBtn">查词</button>
       <button class="btn" id="bookBtn">生词本</button>
       <button class="btn" id="usageBtn">费用统计</button>
       <!-- 窄屏：被收起来的次要功能 -->
@@ -608,6 +612,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
           <button data-act="print" role="menuitem">打印 / 导出 PDF</button>
           <button data-act="cache" role="menuitem">缓存管理</button>
           <button data-act="prompt" role="menuitem">AI 解词提示词</button>
+          <button data-act="lookup" role="menuitem">查词</button>
           <button data-act="book" role="menuitem">生词本</button>
           <button data-act="usage" role="menuitem">费用统计</button>
         </div>
@@ -762,6 +767,16 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   </div>
 </div>
 
+<div class="modal-mask" id="lookupModal" role="dialog" aria-modal="true" aria-labelledby="lookupTitle">
+  <div class="modal study-modal">
+    <button class="tt-close" id="lookupClose" aria-label="关闭查词">✕</button>
+    <h3 id="lookupTitle">查词</h3>
+    <p>优先查询内置词典，无需 API Key；未收录时自动转到 AI 详解（需 API Key，按用量计费）。</p>
+    <form class="lookup-form" id="lookupForm"><input id="lookupInput" type="search" aria-label="英文单词或词组" placeholder="输入英文单词或词组" autocomplete="off" spellcheck="false" maxlength="200"><button class="btn primary" id="lookupSubmit" type="submit">查询</button></form>
+    <div id="lookupResult" aria-live="polite"></div>
+  </div>
+</div>
+
 <div class="modal-mask" id="bookModal" role="dialog" aria-modal="true" aria-labelledby="bookTitle">
   <div class="modal study-modal">
     <button class="tt-close" data-study-close aria-label="关闭生词本">✕</button>
@@ -803,7 +818,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
    常量与配置
    ============================================================ */
 const API_URL = 'https://api.deepseek.com/chat/completions';
-const APP_VERSION = '1.5';              // 版本号：顶栏徽标 / 页脚 / README 保持一致
+const APP_VERSION = '1.5.1';            // 版本号：顶栏徽标 / 页脚 / README 保持一致
 const MODEL   = 'deepseek-flash';       // 官方模型名（旧名 deepseek-v4-flash 已下线）
 const MODEL_LABEL = 'DeepSeek V4.1 Flash';
 const BATCH_SIZE = 5;                   // 每批句子数
@@ -2867,6 +2882,7 @@ document.addEventListener('keydown', e => {
     clearPick();
     closeDictCard();
     /* 所有弹窗都要能被 Esc 关掉（提示词编辑器和缓存管理以前只能点关闭按钮） */
+    closeLookup();
     ['#keyModal','#wordModal','#promptModal','#cacheModal','#bookModal','#usageModal','#imageModal'].forEach(sel => {
       const el = $(sel);
       if(el) el.classList.remove('show');
@@ -3271,6 +3287,42 @@ function dictCardBody(res, word){
       <button class="mini-btn" data-dc-ai="1">用 AI 详解</button>
       <button class="mini-btn" data-dc-copy="1">复制释义</button>
     </div>`;
+}
+
+/* Independent lookup reuses the embedded dictionary and existing AI / vocabulary flows. */
+let lookupSeq=0;
+function closeLookup(){lookupSeq++;$('#lookupModal').classList.remove('show');$('#lookupSubmit').disabled=false;if($('#lookupResult').textContent==='正在查询内置词典…')$('#lookupResult').textContent='';}
+function openLookup(){
+  closeDictCard();$('#lookupModal').classList.add('show');$('#lookupSubmit').disabled=false;
+  $('#lookupInput').focus();
+}
+async function lookupWord(){
+  const word=$('#lookupInput').value.replace(/\s+/g,' ').trim();
+  const seq=++lookupSeq,output=$('#lookupResult');
+  $('#lookupSubmit').disabled=false;
+  if(!word){output.textContent='请输入英文单词或词组';$('#lookupInput').focus();return;}
+  if(word.length>200 || !/[A-Za-z]/.test(word)){output.textContent='请输入 200 字符以内的英文单词或词组';return;}
+  $('#lookupSubmit').disabled=true;output.textContent='正在查询内置词典…';
+  try{
+    try{await loadDict();}catch(_){}
+    if(seq!==lookupSeq)return;
+    const found=dictLookup(word);
+    // Partial phrase / hyphen fallbacks do not count as finding the whole entry.
+    const hit=found && !found.headOnly && found.viaRule!=='hyphen' ? found : null;
+    output.innerHTML=hit?dictEntryHtml(hit):`<div class="dc-head"><b>${esc(word)}</b></div><p>${dictState==='failed'?'本地词典暂不可用':'本地词典未收录完整词条'}，已转到 AI 详解。</p>`;
+    const actions=document.createElement('div');actions.className='dc-actions';
+    const collect=document.createElement('button');collect.className='btn';collect.textContent='收藏到生词本';collect.onclick=()=>collectWord(word,null);
+    const ai=document.createElement('button');ai.className='btn';ai.textContent='AI 详解';
+    ai.onclick=()=>{closeLookup();explainWord(word,'',false,null);};actions.appendChild(collect);actions.appendChild(ai);output.appendChild(actions);
+    if(!hit){closeLookup();await explainWord(word,'',false,null);}
+  }finally{if(seq===lookupSeq)$('#lookupSubmit').disabled=false;}
+}
+function initLookupUI(){
+  $('#lookupBtn').onclick=openLookup;
+  $('#lookupForm').onsubmit=e=>{e.preventDefault();lookupWord();};
+  $('#lookupClose').onclick=closeLookup;
+  $('#lookupModal').addEventListener('click',e=>{if(e.target.id==='lookupModal')closeLookup();});
+  $('#lookupInput').oninput=()=>{lookupSeq++;$('#lookupSubmit').disabled=false;$('#lookupResult').textContent='';};
 }
 
 function placeDictCard(el, rect){
@@ -3913,6 +3965,7 @@ $('#moreMenu').addEventListener('click', e => {
   else if(act === 'print'){ if(!$('#printBtn').disabled) $('#printBtn').click(); else setStatus('还没有可打印的分析结果', 'err'); }
   else if(act === 'cache') openCacheModal();
   else if(act === 'prompt') openPromptModal();
+  else if(act === 'lookup') openLookup();
   else if(act === 'book') openBook();
   else if(act === 'usage') openUsage();
 });
@@ -4219,7 +4272,7 @@ function initOcrUI(){
   $('#imageModal').onclick=e=>{if(e.target.id==='imageModal'||e.target.closest('[data-study-close]'))$('#imageModal').classList.remove('show');};
 }
 
-initStudyUI();initOcrUI();
+initStudyUI();initOcrUI();initLookupUI();
 
 /* 标注区字体偏好默认值 */
 if(!restore('ds_pref_font', null)) fontMode = 'prose';

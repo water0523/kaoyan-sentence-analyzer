@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {runtime,html}=require('./runtime.cjs');
 const plain=x=>JSON.parse(JSON.stringify(x));
-test('all page scripts initialize, including permanent book and usage UI',()=>{const r=runtime();assert.equal(r.run('APP_VERSION'),'1.5');assert.equal(r.run('vocabBook.defaultFolderId'),'inbox');});
+test('all page scripts initialize, including permanent book and usage UI',()=>{const r=runtime();assert.equal(r.run('APP_VERSION'),'1.5.1');assert.equal(r.run('vocabBook.defaultFolderId'),'inbox');});
 test('partial / total failure complete without a scope error',async()=>{
   for(const successes of [0,1]){
     const r=runtime();r.run(`state.apiKey='test';$('#articleInput').value='He works. She left.';splitArticle=async()=>[['He works.','She left.']];runBatches=async list=>list.forEach((s,i)=>{s.status=i<${successes}?'ok':'error';s.data=i<${successes}?{segments:[{text:s.text,type:'subject'}]}:null;});`);
@@ -64,6 +64,17 @@ test('dictionary loading waits and ignores older word results in the same phrase
   assert.match(r.node('#dictCard').innerHTML,/载入中/);
   r.run(`dictState='ready';dictCardBody=(_res,word)=>word;dictLookupBest=()=>({});`);resolve();await Promise.all([older,newer]);
   assert.equal(r.node('#dictCard').innerHTML,'bird');
+});
+test('standalone lookup ignores a stale dictionary load after another query or closing',async()=>{
+  const r=runtime();let resolve;r.ctx.ready=new Promise(x=>resolve=x);r.run(`loadDict=()=>ready;dictLookup=word=>({entry:{word,tr:'local',ph:'',tag:'',ex:''}});$('#lookupInput').value='old';`);
+  const old=r.run('lookupWord()');r.run(`$('#lookupInput').value='new'`);const newer=r.run('lookupWord()');resolve();await Promise.all([old,newer]);
+  assert.match(r.node('#lookupResult').innerHTML,/new/);assert.doesNotMatch(r.node('#lookupResult').innerHTML,/old/);
+  let resolveClosed;r.ctx.ready=new Promise(x=>resolveClosed=x);r.run(`$('#lookupInput').value='closed';openLookup()`);const closed=r.run('lookupWord()');r.run('closeLookup()');resolveClosed();await closed;assert.equal(r.node('#lookupModal').classList.contains('show'),false);assert.doesNotMatch(r.node('#lookupResult').innerHTML,/closed/);
+});
+test('standalone missing phrases use AI for the full phrase rather than the first word',async()=>{
+  const r=runtime();r.ctx.fallback=[];r.run(`loadDict=async()=>true;dictLookup=()=>({headOnly:true,entry:{word:'rare',tr:'稀少'}});explainWord=async word=>fallback.push(word);$('#lookupInput').value='rare unknown phrase';`);
+  await r.run('lookupWord()');assert.deepEqual(plain(r.ctx.fallback),['rare unknown phrase']);assert.equal(r.node('#lookupSubmit').disabled,false);
+  r.run(`dictLookup=()=>({viaRule:'hyphen',entry:{word:'unknown',tr:'未知'}});$('#lookupInput').value='unknown-compound';`);await r.run('lookupWord()');assert.equal(r.ctx.fallback[1],'unknown-compound');
 });
 test('Anki export declares deck / HTML, escapes content and merges example sentences',()=>{
   const r=runtime();const text=r.run(String.raw`ankiText([{word:'R&D',folderId:'inbox',meaning:'"研究"\n开发 <b>',phonetic:'test',note:'A\tB',contexts:[{sentence:'He said "hi".',trans:'中文',meaning:'义项'},{sentence:'another',trans:'另一个',meaning:'义项2'}]}])`);

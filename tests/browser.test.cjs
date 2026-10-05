@@ -21,6 +21,38 @@ async function pageFixture(viewport={width:1440,height:1000}){
 async function article(page,text='He is a rare bird.'){
   await page.evaluate(text=>{state.articleCacheKey=cacheKeyFor(text);$('#articleInput').value=text;loadResult([{text,para:0,data:{segments:[{text,type:'subject',note:'test'}],clauses:[],gloss:[{w:'rare bird',t:'罕见的人',pos:'phr.'}],vocab:[{w:'rare bird',t:'罕见的人',pos:'phr.'}],trans:'他是个罕见的人。'}}]);},text);
 }
+
+test('independent lookup works without an article / API key and collects local dictionary entries',async()=>{
+  const {page,context,errors}=await pageFixture();let calls=0;page.on('request',req=>{if(req.url().includes('api.deepseek.com'))calls++;});
+  try{
+    await page.evaluate(()=>state.apiKey='');await page.locator('#lookupBtn').click();await page.locator('#lookupInput').fill('brought');await page.locator('#lookupInput').press('Enter');
+    await page.locator('#lookupResult').getByRole('button',{name:'收藏到生词本'}).waitFor();assert.match(await page.locator('#lookupResult').innerText(),/bring/);assert.match(await page.locator('#lookupResult').innerText(),/变形/);assert.equal(calls,0);
+    await page.locator('#lookupResult').getByRole('button',{name:'收藏到生词本'}).click();await page.waitForFunction(()=>vocabBook.entries.length===1);assert.equal(await page.evaluate(()=>vocabBook.entries[0].word),'brought');assert.equal(await page.evaluate(()=>vocabBook.entries[0].contexts.length),0);
+    await page.locator('#lookupInput').fill('  ');await page.locator('#lookupInput').press('Enter');assert.match(await page.locator('#lookupResult').innerText(),/请输入/);assert.equal(calls,0);
+    await page.locator('#lookupInput').fill('<img src=x onerror=alert(1)>');await page.locator('#lookupInput').press('Enter');await page.locator('#keyModal.show').waitFor();assert.equal(await page.locator('#lookupResult img').count(),0);assert.equal(calls,0);assert.deepEqual(errors,[]);
+  }finally{await context.close();}
+});
+
+test('unknown standalone phrase automatically uses AI, caches it and records word usage',async()=>{
+  const {page,context,errors}=await pageFixture();let calls=0,prompt='';
+  try{
+    await page.unroute('https://api.deepseek.com/**');await page.route('https://api.deepseek.com/**',async route=>{calls++;prompt=route.request().postDataJSON().messages.at(-1).content;await route.fulfill({json:reply({meaning:'整条词组的释义',usage:'短语用法',examples:[]})});});
+    await page.locator('#lookupBtn').click();await page.locator('#lookupInput').fill('rare zqxvlookup');await page.locator('#lookupInput').press('Enter');await page.waitForFunction(()=>wordModalMeaning==='整条词组的释义');
+    assert.match(prompt,/rare zqxvlookup/);assert.match(prompt,/无上下文/);assert.equal(await page.locator('#lookupModal.show').count(),0);assert.equal(await page.evaluate(()=>usageTotals.word.requests),1);
+    await page.locator('#wmCollect').click();await page.waitForFunction(()=>vocabBook.entries.length===1);assert.equal(await page.evaluate(()=>vocabBook.entries[0].meaning),'整条词组的释义');
+    await page.keyboard.press('Escape');await page.locator('#lookupBtn').click();await page.locator('#lookupInput').press('Enter');await page.waitForFunction(()=>wordModalMeaning==='整条词组的释义');assert.equal(calls,1);assert.deepEqual(errors,[]);
+  }finally{await context.close();}
+});
+
+test('mobile lookup is reachable and its form stays in the viewport',async()=>{
+  const {page,context,errors}=await pageFixture({width:390,height:844});
+  try{
+    await page.locator('#moreBtn').click();await page.locator('[data-act="lookup"]').click();await page.locator('#lookupInput').fill('bird');await page.locator('#lookupSubmit').click();await page.locator('#lookupResult').getByRole('button',{name:'收藏到生词本'}).waitFor();
+    const rect=await page.locator('#lookupModal .modal').boundingBox();assert.ok(rect.x>=0&&rect.x+rect.width<=390);assert.equal(await page.locator('#lookupSubmit').isEnabled(),true);assert.deepEqual(errors,[]);
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('#lookupModal .modal')).opacity==='1');fs.mkdirSync(path.join(__dirname,'../test-results'),{recursive:true});await page.screenshot({path:path.join(__dirname,'../test-results/mobile-lookup.png')});
+    await page.keyboard.press('Escape');assert.equal(await page.locator('#lookupModal.show').count(),0);
+  }finally{await context.close();}
+});
 test('desktop Alt-click collects clicked word in a phrase, folders persist, editing/export/backup work',async()=>{
   const {page,context,errors}=await pageFixture();
   try{
@@ -112,17 +144,17 @@ test('mobile menus and modal / OCR layouts remain within the viewport',async()=>
   }finally{await context.close();}
 });
 test('downloaded single HTML opens through file URL without runtime resources',async()=>{
-  const context=await browser.newContext(),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  try{await page.goto(require('node:url').pathToFileURL(path.join(__dirname,'../index.html')).href);await page.locator('#bookBtn').click();assert.equal(await page.locator('#bookModal').isVisible(),true);assert.deepEqual(errors,[]);}finally{await context.close();}
+  const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  try{await page.goto(require('node:url').pathToFileURL(path.join(__dirname,'../index.html')).href);await page.locator('#bookBtn').click();assert.equal(await page.locator('#bookModal').isVisible(),true);await page.keyboard.press('Escape');await page.locator('#lookupBtn').click();await page.locator('#lookupInput').fill('bird');await page.locator('#lookupInput').press('Enter');await page.locator('#lookupResult').getByRole('button',{name:'收藏到生词本'}).waitFor();assert.match(await page.locator('#lookupResult').innerText(),/鸟/);assert.deepEqual(errors,[]);}finally{await context.close();}
 });
 test('toolbar remains reachable at desktop / tablet breakpoint widths',async()=>{
   const {page,context}=await pageFixture();
   try{
-    for(const width of [901,920,1080,1440]){
+    for(const width of [901,920,1080,1160,1200,1280,1300,1440]){
       await page.setViewportSize({width,height:1000});
       const r=await page.locator('#keyBtn').boundingBox();assert.ok(r.x+r.width<=width,`API key button overflows at ${width}`);
-      if(width<=1160){await page.locator('#moreBtn').click();assert.equal(await page.locator('[data-act="book"]').isVisible(),true);await page.keyboard.press('Escape');}
-      else{const b=await page.locator('#bookBtn').boundingBox();assert.ok(b && b.x+b.width<=width,`book inaccessible at ${width}`);}
+      if(width<=1280){await page.locator('#moreBtn').click();assert.equal(await page.locator('[data-act="book"]').isVisible(),true);assert.equal(await page.locator('[data-act="lookup"]').isVisible(),true);await page.keyboard.press('Escape');}
+      else{const b=await page.locator('#lookupBtn').boundingBox();assert.ok(b && b.x+b.width<=width,`lookup inaccessible at ${width}`);}
     }
     await article(page);await page.locator('#bookBtn').click();await page.evaluate(()=>collectWord('bird',state.sentences[0]));
     await page.waitForFunction(()=>getComputedStyle(document.querySelector('#bookModal .modal')).opacity==='1');
