@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<title>考研英语长难句分析工具 v1.4 · DeepSeek</title>
+<title>考研英语长难句分析工具 v1.5 · DeepSeek</title>
 <style>
 :root{
   --ink:#1c2333; --ink2:#5b6472; --line:#e8e6e1; --bg:#faf9f7; --card:#ffffff;
@@ -515,6 +515,56 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   html{scroll-behavior:auto}
 }
+/* Study tools: keep the warm paper palette and existing controls. */
+[hidden]{display:none!important}
+.study-modal{position:relative;width:min(960px,94vw);max-width:960px;max-height:90vh;overflow:auto}
+.study-modal .tt-close,.image-modal .tt-close{position:absolute;top:14px;right:16px;color:var(--ink2);font-size:15px}
+.study-modal h4{margin:20px 0 10px;font-size:14px}
+.study-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.study-actions label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
+.study-actions select,.study-actions input,.book-entry textarea,#bookSearch{border:1px solid var(--line);border-radius:8px;background:var(--card);padding:8px;color:var(--ink);font:inherit;min-width:0}
+.study-actions input[type=number]{width:90px}
+.book-layout{display:grid;grid-template-columns:165px minmax(0,1fr);gap:20px;margin-top:18px}
+#bookFolders{display:flex;flex-direction:column;gap:5px;align-self:start}
+.folder-btn{display:flex;justify-content:space-between;gap:8px;text-align:left;border:0;background:transparent;padding:10px 12px;border-radius:8px;cursor:pointer;overflow-wrap:anywhere;color:var(--ink2)}
+.folder-btn.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.folder-btn span{font-weight:400;color:var(--ink2)}
+#bookSearch{width:100%;box-sizing:border-box}
+.book-entry{border-top:1px solid var(--line);padding:15px 0}
+.book-word{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:18px}
+.book-word span{font-size:13px;color:var(--ink2)}
+.book-word input[type=checkbox]{width:auto;flex:0 0 auto}
+.book-meaning{white-space:pre-wrap;line-height:1.65;font-size:14px;overflow-wrap:anywhere}
+.book-entry summary,.study-help summary{cursor:pointer;color:var(--accent);font-size:13px}
+.book-entry blockquote{margin:12px 0;border-left:2px solid var(--line);padding:4px 12px;line-height:1.6;font-size:14px;overflow-wrap:anywhere}
+.book-entry small{display:block;color:var(--ink2);white-space:pre-wrap;margin-top:5px}
+.book-entry label:not(.book-word){display:block;font-size:13px;color:var(--ink2);margin-top:12px}
+.book-entry textarea{display:block;box-sizing:border-box;width:100%;resize:vertical;margin-top:6px;line-height:1.6}
+.study-export{border-top:1px solid var(--line);padding-top:15px;margin-top:20px}
+.study-empty{padding:30px 10px;text-align:center;color:var(--ink2)}
+.study-warning{color:#b91c1c;font-size:13px;white-space:pre-wrap}
+.table-scroll{overflow:auto}
+.study-table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap;text-align:right}
+.study-table th,.study-table td{padding:9px;border-bottom:1px solid var(--line)}
+.study-table th:first-child,.study-table td:first-child{text-align:left}
+.study-table thead{background:var(--bg);color:var(--ink2)}
+.study-table tbody tr:last-child{font-weight:600;background:var(--accent-soft)}
+.ocr-page{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid var(--line)}
+.ocr-preview{align-self:start}.image-zoom{display:block;width:100%;padding:0;border:1px solid var(--line);background:var(--bg);cursor:zoom-in;border-radius:8px;overflow:hidden}
+.image-zoom img{display:block;width:100%;max-height:200px;object-fit:contain}
+.ocr-page-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;font-size:12px}
+.ocr-page-head span{flex:1;overflow-wrap:anywhere;color:var(--ink2)}
+.ocr-page-body label{font-size:12px;color:var(--ink2)}
+.ocr-page textarea{display:block;box-sizing:border-box;width:100%;border:1px solid var(--line);border-radius:8px;resize:vertical;padding:10px;font:14px/1.65 Georgia,serif;color:var(--ink);background:var(--card);margin-top:4px}
+.ocr-page-foot{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:8px;color:var(--ink2);font-size:12px}
+.image-modal{position:relative;width:94vw;max-width:1200px;max-height:92vh;overflow:auto;padding-top:40px}
+.image-modal img{display:block;max-width:100%;height:auto;margin:auto}
+#imgList.img-list{display:block}
+@media(max-width:900px){#bookBtn,#usageBtn{display:none}.book-layout{grid-template-columns:minmax(0,1fr);gap:12px}#bookFolders{flex-direction:row;flex-wrap:wrap}.folder-btn{padding:7px 10px}.study-modal{padding:22px 16px}.ocr-page{grid-template-columns:minmax(0,1fr);gap:10px}.ocr-preview{max-width:100%}.image-zoom img{max-height:150px}.study-actions{gap:6px}.study-table th,.study-table td{padding:7px}}
+@media print{#cancelBtn,#bookModal,#usageModal,#imageModal{display:none!important}}
+/* Keep the added tools reachable before the full desktop toolbar stops fitting. */
+@media(max-width:1160px){#modeToggle,#transBtn,#glossBtn,#fontBtn,#printBtn,#cacheBtn,#promptBtn,#bookBtn,#usageBtn{display:none}.more-wrap{display:block}.ver{display:none}}
+
 </style>
 </head>
 <body>
@@ -535,6 +585,8 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
       <button class="btn ico" id="printBtn" title="打印 / 导出 PDF" disabled>⎙</button>
       <button class="btn ico" id="cacheBtn" title="清除缓存"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M10 11v7M14 11v7"/></svg></button>
       <button class="btn ico" id="promptBtn" title="AI 解词提示词设置"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .33 1.76l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.76-.33 1.6 1.6 0 0 0-1 1.47V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.47 1.6 1.6 0 0 0-1.76.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .33-1.76 1.6 1.6 0 0 0-1.47-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.47-1 1.6 1.6 0 0 0-.33-1.76l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.6 1.6 0 0 0 1.76.33H9a1.6 1.6 0 0 0 1-1.47V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.47 1.6 1.6 0 0 0 1.76-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.33 1.76V9a1.6 1.6 0 0 0 1.47 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.47 1z"/></svg></button>
+      <button class="btn" id="bookBtn">生词本</button>
+      <button class="btn" id="usageBtn">费用统计</button>
       <!-- 窄屏：被收起来的次要功能 -->
       <div class="more-wrap">
         <button class="btn ico" id="moreBtn" title="更多" aria-haspopup="true" aria-expanded="false">
@@ -556,6 +608,8 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
           <button data-act="print" role="menuitem">打印 / 导出 PDF</button>
           <button data-act="cache" role="menuitem">缓存管理</button>
           <button data-act="prompt" role="menuitem">AI 解词提示词</button>
+          <button data-act="book" role="menuitem">生词本</button>
+          <button data-act="usage" role="menuitem">费用统计</button>
         </div>
       </div>
       <button class="btn primary" id="keyBtn">设置 API Key</button>
@@ -586,6 +640,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
             <input type="file" id="fileInput" accept="image/*" multiple hidden>
           </div>
           <div class="img-list" id="imgList"></div>
+          <div class="study-actions" id="ocrApply" hidden><button class="btn" id="ocrAppend">追加校对文字到正文</button><button class="btn" id="ocrReplace">替换正文</button></div>
         </div>
       </div>
       <div class="progress-wrap" id="progressWrap">
@@ -597,6 +652,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
         <button class="btn" id="ocrBtn" style="display:none">识别图片文字</button>
         <button class="btn" id="reanalyzeBtn" style="display:none">重新分析</button>
         <button class="btn" id="sampleBtn">载入示例</button>
+        <button class="btn" id="cancelBtn" hidden>取消任务</button>
         <span class="status" id="status" role="status" aria-live="polite"></span>
       </div>
     </div>
@@ -641,6 +697,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
     <div class="wm-sent" id="wmSent"></div>
     <div id="wmBody"></div>
     <div class="wm-meta">
+      <button class="mini-btn" id="wmCollect">收藏到生词本</button>
       <button class="mini-btn" id="wmReexplain">重新解释</button>
       <button class="mini-btn" id="wmEditPrompt">编辑提示词</button>
     </div>
@@ -705,10 +762,30 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
   </div>
 </div>
 
+<div class="modal-mask" id="bookModal" role="dialog" aria-modal="true" aria-labelledby="bookTitle">
+  <div class="modal study-modal">
+    <button class="tt-close" data-study-close aria-label="关闭生词本">✕</button>
+    <h3 id="bookTitle">我的生词本</h3>
+    <p>Alt＋左键收藏单词，也可在释义卡里点收藏。分类与原句独立保存，不随分析缓存清除。</p>
+    <div class="study-actions"><label>默认收藏到 <select id="bookDefault" aria-label="默认收藏位置"></select></label><button class="btn" id="bookNew">新建分类</button><button class="btn" id="bookRename">重命名</button><button class="btn" id="bookDeleteFolder">删除分类</button></div>
+    <div class="book-layout"><nav id="bookFolders" aria-label="生词分类"></nav><section>
+      <input id="bookSearch" type="search" placeholder="搜索单词、释义或笔记" aria-label="搜索生词">
+      <div class="study-actions"><span id="bookCount"></span><button class="mini-btn" id="bookSelectAll">全选／取消全选</button><select id="bookMove" aria-label="移动到分类"></select><button class="mini-btn" id="bookMoveBtn">移动选中</button></div>
+      <p id="bookWarning" class="study-warning"></p><div id="bookEntries"></div>
+    </section></div>
+    <div class="study-actions study-export"><button class="btn" data-anki-export="current">导出当前分类</button><button class="btn" data-anki-export="all">导出全部到 Anki</button><button class="btn" data-anki-export="selected">导出选中</button><button class="btn" id="bookBackup">备份 JSON</button><label class="btn">恢复备份<input id="bookRestore" type="file" accept=".json,application/json" hidden></label></div>
+    <details class="study-help"><summary>Anki 导入方法</summary><p>在 Anki 桌面版选择“导入文件”，选择导出的 .txt；笔记类型选“基础 / Basic”，前两列映射到正面、背面。文件已声明 Tab 分隔、HTML 与牌组列。重复检测匹配范围选“笔记类型及牌组”，即可在不同分类保留同一个词；再次导入选择更新现有笔记。建议 Anki 2.1.54 或更新版本。</p></details>
+  </div>
+</div>
+<div class="modal-mask" id="usageModal" role="dialog" aria-modal="true" aria-labelledby="usageTitle">
+  <div class="modal study-modal"><button class="tt-close" data-study-close aria-label="关闭费用统计">✕</button><h3 id="usageTitle">用量与预估费用</h3><p>按接口回执统计 token；本地缓存命中不产生请求。取消或网络中断可能没有用量回执，未知费用不计入已知金额，最终以平台账单为准。</p><div id="usageBody"></div><h4>人民币单价（每百万 token）</h4><div class="study-actions"><label>费率 <select id="ratePreset"><option value="custom">自定义／当前</option><option value="peak">高峰</option><option value="offpeak">闲时</option></select></label><label>命中输入<input id="ratehit" type="number" min="0" step="any"></label><label>未命中输入<input id="ratemiss" type="number" min="0" step="any"></label><label>输出<input id="rateout" type="number" min="0" step="any"></label><button class="btn" id="rateSave">保存费率</button></div><p>默认按高峰价估算；请按使用时段选择闲时或调整单价。已记录费用保留请求当时的费率。<a href="https://api-docs.deepseek.com/zh-cn/quick_start/pricing/" target="_blank" rel="noopener">官方价格</a>（核对日期：2026-10-05）</p></div>
+</div>
+<div class="modal-mask" id="imageModal" role="dialog" aria-modal="true" aria-label="原图预览"><div class="modal image-modal"><button class="tt-close" data-study-close aria-label="关闭原图">✕</button><img id="zoomImage" alt="待校对原图"></div></div>
+
 <div class="modal-mask" id="keyModal">
   <div class="modal">
     <h3>设置 DeepSeek API Key</h3>
-    <p>Key 仅保存在你自己的浏览器 localStorage 中，不会上传到任何第三方服务器。可在 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek 开放平台</a> 创建。</p>
+    <p>Key 保存在当前浏览器中，调用 AI 时随请求发送给 DeepSeek 验证。可在 <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener">DeepSeek 开放平台</a> 创建。</p>
     <input type="password" id="keyInput" placeholder="sk-..." autocomplete="off" spellcheck="false">
     <div class="key-tip" id="keyTip"></div>
     <div class="modal-foot">
@@ -726,7 +803,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
    常量与配置
    ============================================================ */
 const API_URL = 'https://api.deepseek.com/chat/completions';
-const APP_VERSION = '1.4';              // 版本号：顶栏徽标 / 页脚 / README 保持一致
+const APP_VERSION = '1.5';              // 版本号：顶栏徽标 / 页脚 / README 保持一致
 const MODEL   = 'deepseek-flash';       // 官方模型名（旧名 deepseek-v4-flash 已下线）
 const MODEL_LABEL = 'DeepSeek V4.1 Flash';
 const BATCH_SIZE = 5;                   // 每批句子数
@@ -734,8 +811,8 @@ const CONCURRENCY = 3;                  // 并发批次数
 const MAX_TOKENS = 16384;               // 单次请求最大输出（deepseek-flash 上限远高于此；8192 会截断 5 句的长批）
 const REQ_TIMEOUT = 180000;             // 单次请求超时（毫秒）
 const CACHE_PRE = 'ds_ana_v6_';         // 缓存前缀（版本变更后旧缓存自动失效；v6：两层结构）
-const WORD_CACHE_PRE = 'ds_word_v3_';   // 解词缓存（v3：缓存键已带上提示词指纹）
-const GRAM_CACHE_PRE = 'ds_gram_v1_';   // 语法精析缓存（v1：缓存键已带上提示词指纹）
+const WORD_CACHE_PRE = 'ds_word_v4_';   // v4：包含实际提示词、原句、译文与段落
+const GRAM_CACHE_PRE = 'ds_gram_v2_';   // v2：包含实际提示词、译文与段落
 /* 任意版本的缓存键：统计与「清空全部缓存」必须覆盖旧版本，否则升版后旧数据永远统计不到也清不掉 */
 const CACHE_KEY_RE = /^ds_(?:ana|word|gram)_v\d+_/;
 const CACHE_CUR_PRE = [CACHE_PRE, WORD_CACHE_PRE, GRAM_CACHE_PRE];
@@ -852,6 +929,7 @@ const state = {
   sentences: [],         // [{text, data|null, status, para, error}]
   paragraphs: [],        // [[句索引...], ...]
   vocab: [],             // [{w,t,pos,key}]
+  articleCacheKey: '',
   analyzing: false,
   hasResult: false,
   splitFallback: ''      // AI 断句失败时的兜底说明（如「本地规则断句」）
@@ -1134,24 +1212,7 @@ document.addEventListener('paste', e => {
 });
 
 let imgBusy = 0;
-function addImages(files){
-  const list = (files || []).filter(isImageFile);
-  if(!list.length){ setStatus('没有识别到可用的图片文件', 'err'); return; }
-  list.forEach(f => {
-    imgBusy++;
-    const rd = new FileReader();
-    rd.onload = () => {
-      compressImage(rd.result, dataUrl => {
-        state.images.push({dataUrl});
-        renderImgList();
-        if(--imgBusy <= 0) setStatus(`已添加 ${state.images.length} 张图片，点击「识别图片文字」开始转录`, 'ok');
-      });
-    };
-    rd.onerror = () => { imgBusy--; setStatus('图片读取失败，请重试', 'err'); };
-    rd.readAsDataURL(f);
-  });
-  setStatus('正在处理图片…', 'busy');
-}
+
 function compressImage(dataUrl, cb){
   const img = new Image();
   let done = false;
@@ -1173,105 +1234,168 @@ function compressImage(dataUrl, cb){
   img.onerror = () => { clearTimeout(timer); finish(dataUrl); };
   img.src = dataUrl;
 }
-function renderImgList(){
-  $('#imgList').innerHTML = state.images.map((im,i) =>
-    `<div class="img-item"><img src="${esc(im.dataUrl)}" alt="待识别图片 ${i+1}"><button class="rm" data-i="${i}" title="移除" aria-label="移除图片">✕</button></div>`
-  ).join('');
-  $('#imgList').querySelectorAll('.rm').forEach(b => {
-    b.onclick = () => { state.images.splice(+b.dataset.i, 1); renderImgList(); };
-  });
-}
-
-$('#ocrBtn').onclick = async () => {
-  if(!requireKey()) return;
-  if(!state.images.length){ setStatus('请先添加图片', 'err'); return; }
-  const btn = $('#ocrBtn');
-  const oldLabel = btn.textContent;
-  btn.disabled = true; btn.textContent = '识别中…';
-  setStatus('正在识别图片文字…', 'busy');
-  setProgress(0, 1, `正在转录 ${state.images.length} 张图片，请稍候…`);
-  try{
-    /* 文本框里已有内容时先确认，避免 OCR 直接覆盖掉用户刚粘贴的文章 */
-    const existing = $('#articleInput').value.trim();
-    if(existing && !confirm('文本框里已经有内容了，识别结果会覆盖它。确定继续吗？')) return;
-    const content = [{type:'text', text:'请逐字转录图片中的英文文章正文。要求：1) 只输出英文原文文本，保留原有拼写、大小写和标点；2) 段落之间用一个空行分隔；3) 不要输出任何解释、注释、翻译或 markdown 标记；4) 若有多张图片，按图片顺序依次转录并拼接。'}];
-    state.images.forEach(im => content.push({type:'image_url', image_url:{url:im.dataUrl}}));
-    const text = (await callAPI([{role:'user', content}], {json:false})).trim();
-    if(!text) throw new Error('识别结果为空');
-    $('#articleInput').value = text;
-    selectTab('text');
-    const words = text.split(/\s+/).filter(Boolean).length;
-    setStatus(`识别完成，已填入文本框（约 ${words} 词），请校对后开始分析`, 'ok');
-  }catch(err){
-    /* 这里的截断是「转录输出太长」，跟「一批句子太多」不是一回事，别复用那句话 */
-    const m = String(err && err.message || err);
-    setStatus('识别失败：' + (/截断/.test(m) ? '图片内容太多，转录被截断，请分几次识别' : m), 'err');
-  }finally{
-    btn.disabled = false; btn.textContent = oldLabel;
-    hideProgress();
-  }
-};
+$('#ocrBtn').onclick = () => startOcr();
 </script>
 
 <script>
 /* ============================================================
    API 调用
    ============================================================ */
-async function callAPI(messages, {json = true, maxTokens = MAX_TOKENS} = {}){
-  const body = {
-    model: MODEL,
-    messages,
-    stream: false,
-    thinking: {type: 'disabled'},   // 语法标注任务不需要思考链，省时省钱且输出更稳定
-    max_tokens: maxTokens
-  };
-  if(json) body.response_format = {type: 'json_object'};   // 注意：JSON 模式要求 prompt 中出现 "JSON" 字样
-
+/* v1.5: task cancellation and API usage (no runtime dependencies). */
+const USAGE_KEY = 'ds_usage_v1';
+const RATE_KEY = 'ds_rates_v1';
+const RATE_PRESETS = {peak:{hit:0.04,miss:2,out:8},offpeak:{hit:0.02,miss:1,out:4}};
+const API_KINDS = {split:'断句',analysis:'分析',word:'解词',grammar:'语法精析',ocr:'OCR'};
+function readLocalJSON(key, fallback){
+  try{ return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback; }catch(_){ return fallback; }
+}
+function validRates(r){ return r && ['hit','miss','out'].every(k => typeof r[k] === 'number' && Number.isFinite(r[k]) && r[k] >= 0); }
+let rates = readLocalJSON(RATE_KEY, RATE_PRESETS.peak);
+if(!validRates(rates)) rates = {...RATE_PRESETS.peak};
+function emptyUsage(){ return {requests:0,unknown:0,input:0,hit:0,miss:0,out:0,cost:0}; }
+function validUsage(u){ return u && Object.keys(emptyUsage()).every(k => Number.isFinite(u[k]) && u[k] >= 0); }
+const savedUsage = readLocalJSON(USAGE_KEY, {});
+let usageTotals = savedUsage?.version===1 ? savedUsage.totals : savedUsage;
+let usageReceipts = savedUsage?.version===1 && Array.isArray(savedUsage.receipts) ? savedUsage.receipts : [];
+let usageSaveFailed = false;
+if(!usageTotals || typeof usageTotals !== 'object' || Array.isArray(usageTotals)) usageTotals = {};
+for(const k of Object.keys(usageTotals)) if(!Object.hasOwn(API_KINDS,k) || !validUsage(usageTotals[k])) delete usageTotals[k];
+let taskSerial = 0, activeTask = null, lastTask = null;
+let articleRevision = 0;
+function canceledError(){ const e = new Error('已取消'); e.name = 'AbortError'; return e; }
+function isCanceled(e){ return e?.name === 'AbortError'; }
+function checkTask(task){ if(task?.controller.signal.aborted) throw canceledError(); }
+function beginTask(kind){
+  if(activeTask) return null;
+  const task = {id:++taskSerial,kind,controller:new AbortController(),usage:{}};
+  activeTask = task; lastTask = task;
+  $('#cancelBtn').hidden = false;
+  $('#analyzeBtn').disabled = true; $('#ocrBtn').disabled = true;
+  $('#reanalyzeBtn').disabled = true;
+  return task;
+}
+function endTask(task){
+  if(activeTask !== task) return;
+  lastTask = task;
+  activeTask = null; $('#cancelBtn').hidden = true;
+  resetButtons(); $('#ocrBtn').disabled = imgBusy > 0;
+  $('#reanalyzeBtn').disabled = false;
+  renderImgList();
+  if($('#usageModal')?.classList.contains('show')) renderUsage();
+}
+function cancelActiveTask(){
+  if(!activeTask) return;
+  activeTask.controller.abort();
+  $('#cancelBtn').disabled = true;
+  setStatus('正在取消，保留已完成的结果…','busy');
+}
+function abortableDelay(ms, task){
+  checkTask(task);
+  return new Promise((resolve,reject) => {
+    const signal = task?.controller.signal;
+    const finish = () => { signal?.removeEventListener('abort', abort); resolve(); };
+    const timer = setTimeout(finish,ms);
+    const abort = () => { clearTimeout(timer); signal?.removeEventListener('abort',abort); reject(canceledError()); };
+    signal?.addEventListener('abort',abort,{once:true});
+  });
+}
+function usageDelta(usage, snapshot){
+  const d = emptyUsage(); d.requests = 1;
+  const known = usage && ['prompt_tokens','completion_tokens'].every(k => Number.isFinite(usage[k]) && usage[k] >= 0);
+  if(!known){ d.unknown = 1; return d; }
+  d.input = usage.prompt_tokens;
+  const cached = usage.prompt_cache_hit_tokens ?? usage.prompt_tokens_details?.cached_tokens;
+  if(!Number.isFinite(cached) || cached < 0 || cached > usage.prompt_tokens){
+    // Input totals are known, but the pricing split is not. Do not invent a price.
+    d.out = usage.completion_tokens; d.unknown = 1; return d;
+  }
+  d.hit = cached; d.miss = usage.prompt_tokens - cached; d.out = usage.completion_tokens;
+  d.cost = (d.hit*snapshot.hit + d.miss*snapshot.miss + d.out*snapshot.out)/1e6;
+  return d;
+}
+function addUsage(target, kind, delta){
+  const u = target[kind] ||= emptyUsage();
+  Object.keys(u).forEach(k => u[k] += delta[k]);
+}
+function recordUsage(kind, usage, snapshot, task){
+  const d = usageDelta(usage,snapshot);
+  addUsage(usageTotals,kind,d);
+  const owner = task || {id:++taskSerial,kind,usage:{}};
+  if(!task) lastTask = owner;
+  addUsage(owner.usage,kind,d);
+  usageReceipts.push({at:Date.now(),taskId:owner.id,kind,rates:{...snapshot},...d});
+  try{ localStorage.setItem(USAGE_KEY,JSON.stringify({version:1,totals:usageTotals,receipts:usageReceipts}));usageSaveFailed=false; }
+  catch(_){ usageSaveFailed=true;setStatus('用量已统计，但浏览器无法保存累计记录','err'); }
+  if($('#usageModal')?.classList.contains('show')) renderUsage();
+}
+async function callAPI(messages, {json=true,maxTokens=MAX_TOKENS,signal,task=null,kind='analysis'}={}){
+  checkTask(task);
+  const signals = [...new Set([signal,task?.controller.signal].filter(Boolean))];
+  const isAborted = () => signals.some(s=>s.aborted);
+  if(isAborted()) throw canceledError();
+  const snapshot = {...rates};
+  const body = {model:MODEL,messages,stream:false,thinking:{type:'disabled'},max_tokens:maxTokens};
+  if(json) body.response_format = {type:'json_object'};
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), REQ_TIMEOUT);
-  let res;
+  let timedOut = false, recorded = false, sent = false;
+  const abort = () => ctl.abort();
+  signals.forEach(s=>s.addEventListener('abort',abort,{once:true}));
+  const timer = setTimeout(() => { timedOut=true; ctl.abort(); },REQ_TIMEOUT);
   try{
-    res = await fetch(API_URL, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + state.apiKey},
-      body: JSON.stringify(body),
-      signal: ctl.signal
-    });
+    sent = true;
+    const res = await fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+state.apiKey},body:JSON.stringify(body),signal:ctl.signal});
+    let j;
+    try{ j = await res.json(); }
+    catch(e){ if(isCanceled(e)) throw e; throw new Error('服务端返回的不是合法 JSON（可能是网关或代理拦截）'); }
+    // Account before parsing model content or rejecting truncated / empty completions.
+    recordUsage(kind,j?.usage,snapshot,task); recorded=true;
+    if(!res.ok){
+      let msg = j?.error?.message || 'HTTP '+res.status;
+      if(res.status===401 || res.status===403) msg='API Key 无效或已过期，请重新设置';
+      else if(res.status===402) msg='账户余额不足，请前往 DeepSeek 平台充值';
+      else if(res.status===429) msg='请求过于频繁，请稍后重试';
+      else if(res.status>=500) msg='服务端错误（'+res.status+'），请稍后重试';
+      throw new Error(msg);
+    }
+    checkTask(task);
+    if(isAborted()) throw canceledError();
+    const choice=j?.choices?.[0];
+    if(choice?.finish_reason==='length') throw new Error('输出被 max_tokens 截断，请减少本次内容');
+    const content=choice?.message?.content;
+    if(typeof content!=='string' || !content.trim()) throw new Error('模型返回了空内容，请重试');
+    return content;
   }catch(e){
-    clearTimeout(timer);
-    if(e && e.name === 'AbortError') throw new Error(`请求超时（超过 ${REQ_TIMEOUT/1000} 秒未响应），请重试`);
-    throw new Error('网络请求失败（可能是网络问题或浏览器跨域限制）：' + (e && e.message ? e.message : e));
-  }
-  /* 这里故意不 clearTimeout(timer)：定时器要一直管到正文读完，
-     否则响应头一到就取消超时，正文卡住就永远挂在那里。 */
-
-  if(!res.ok){
-    let msg = 'HTTP ' + res.status;
-    try{ const j = await res.json(); msg = j.error?.message || msg; }catch(_){}
-    if(res.status === 401 || res.status === 403) msg = 'API Key 无效或已过期，请重新设置';
-    else if(res.status === 402) msg = '账户余额不足，请前往 DeepSeek 平台充值';
-    else if(res.status === 429) msg = '请求过于频繁，请稍后重试';
-    else if(res.status >= 500) msg = '服务端错误（' + res.status + '），请稍后重试';
-    throw new Error(msg);
-  }
-
-  /* 定时器要一直管到读完 body：上面 clearTimeout 在「响应头到达」时就执行了，
-     正文若卡住就没有任何超时兜底。另外 200 + 非 JSON 正文（网关/门户页）
-     会抛出裸 SyntaxError，这里统一包成人能看懂的错误。 */
-  let j;
-  try{
-    j = await res.json();
-  }catch(e){
-    if(e && e.name === 'AbortError') throw new Error(`请求超时（超过 ${REQ_TIMEOUT/1000} 秒未响应），请重试`);
-    throw new Error('服务端返回的不是合法 JSON（可能是网关或代理拦截），请稍后重试');
+    if(timedOut && !isAborted()) throw new Error(`请求超时（超过 ${REQ_TIMEOUT/1000} 秒未响应），请重试`);
+    if(isAborted()) throw canceledError();
+    if(e instanceof TypeError) throw new Error('网络请求失败：'+e.message);
+    throw e;
   }finally{
-    clearTimeout(timer);
+    clearTimeout(timer); signals.forEach(s=>s.removeEventListener('abort',abort));
+    if(sent && !recorded) recordUsage(kind,null,snapshot,task);
   }
-  const choice = j.choices?.[0];
-  if(choice && choice.finish_reason === 'length') throw new Error('输出被 max_tokens 截断，本批句子过多，请重试');
-  const content = choice?.message?.content ?? '';
-  if(!content) throw new Error('模型返回了空内容，请重试');
-  return content;
+}
+function refreshProgress(total=state.sentences.length){
+  const ok=state.sentences.filter(s=>s.status==='ok').length;
+  const bad=state.sentences.filter(s=>s.status==='error').length;
+  setProgress(ok+bad,total,bad?`已完成 ${ok+bad} / ${total} 句（${bad} 句失败，可单独重试）`:undefined);
+}
+function saveArticleResult(){
+  if(!state.articleCacheKey || !state.sentences.length) return true;
+  return saveCache(state.articleCacheKey,JSON.stringify({v:6,sentences:state.sentences.map(s=>({text:s.text,data:s.data,para:s.para}))}));
+}
+function usageSum(map){ const sum=emptyUsage(); Object.values(map).forEach(u=>Object.keys(sum).forEach(k=>sum[k]+=u[k])); return sum; }
+function usageTable(map){
+  const rows=Object.keys(API_KINDS).filter(k=>map[k]?.requests).map(k=>[API_KINDS[k],map[k]]);
+  rows.push(['合计',usageSum(map)]);
+  return '<div class="table-scroll"><table class="study-table"><thead><tr><th>用途</th><th>请求</th><th>输入总计</th><th>命中输入</th><th>未命中输入</th><th>输出</th><th>预估费用</th><th>未知用量</th></tr></thead><tbody>'+rows.map(([name,u])=>`<tr><td>${name}</td><td>${u.requests}</td><td>${u.input}</td><td>${u.hit}</td><td>${u.miss}</td><td>${u.out}</td><td>¥${u.cost.toFixed(6)}</td><td>${u.unknown}</td></tr>`).join('')+'</tbody></table></div>';
+}
+function renderUsage(){
+  $('#usageBody').innerHTML=(usageSaveFailed?'<p class="study-warning">累计记录尚未保存：浏览器存储不可用或空间不足。</p>':'')+'<h4>'+(activeTask?'当前任务':'最近任务')+'</h4>'+usageTable((activeTask || lastTask)?.usage || {})+'<h4>本地累计</h4>'+usageTable(usageTotals);
+}
+function openUsage(){
+  renderUsage(); $('#usageModal').classList.add('show');
+  $('#ratePreset').value='custom';
+  ['hit','miss','out'].forEach(k=>$('#rate'+k).value=rates[k]);
 }
 
 /* 容错 JSON 解析：兼容 ```json 包裹、前后夹带说明文字、结尾逗号等情况 */
@@ -1340,12 +1464,12 @@ function normalizeSplit(obj, text, srcParas){
     .filter(p => p.length);
   if(paras.length !== srcParas.length) return null;
   const strip = x => x.replace(/\s/g, '');
-  return strip(paras.flat().join('')) === strip(text) ? paras : null;
+  return paras.every((p,i) => strip(p.join('')) === strip(srcParas[i])) && strip(paras.flat().join('')) === strip(text) ? paras : null;
 }
 
-async function aiSplit(text){
+async function aiSplit(text, task){
   const srcParas = localParagraphs(text);
-  const raw = await callAPI(buildSplitMessages(srcParas));
+  const raw = await callAPI(buildSplitMessages(srcParas), {task,kind:'split'});
   const obj = parseJSON(raw);
   const paras = normalizeSplit(obj, text, srcParas);
   if(!paras) throw new Error('AI 断句结果与原文不一致');
@@ -1431,13 +1555,14 @@ function localSplit(text){
     return out.filter(s => /\S/.test(s));
   }).filter(p => p.length);
 }
-async function splitArticle(text){
+async function splitArticle(text, task){
   try{
     setProgress(0, 1, 'AI 正在通读全文、切分句子…');
-    const paras = await aiSplit(text);
+    const paras = await aiSplit(text, task);
     state.splitFallback = '';
     return paras;
   }catch(err){
+    if(isCanceled(err)) throw err;
     const paras = localSplit(text);
     if(!paras.length) throw new Error('断句失败：' + err.message);
     // 兜底信息一直保留到分析结束，避免被后续进度提示冲掉
@@ -1645,188 +1770,103 @@ function resetButtons(){
 /* 分批并发分析给定的句子集合。
    抽成独立函数是为了「缓存部分命中」时只补跑缺的句子，而不是把整篇重跑一遍。
    total 用整篇句数，进度条才不会被局部补跑带偏。 */
-async function runBatches(list, total){
-  if(!list || !list.length) return;
-  const batches = [];
-  for(let i = 0; i < list.length; i += BATCH_SIZE) batches.push(list.slice(i, i + BATCH_SIZE));
-
-  const refreshProgress = () => {
-    const ok = state.sentences.filter(s => s.status === 'ok').length;
-    const bad = state.sentences.filter(s => s.status === 'error').length;
-    setProgress(Math.min(total, ok + bad), total,
-      bad ? `已完成 ${ok + bad} / ${total} 句（${bad} 句失败，可单独重试）` : undefined);
-  };
-
-  const runBatch = async (batch) => {
-    let lastErr = null;
-    for(let attempt = 0; attempt < 2; attempt++){
+async function runBatches(list,total,task){
+  if(!list?.length) return;
+  const batches=[];
+  for(let i=0;i<list.length;i+=BATCH_SIZE) batches.push(list.slice(i,i+BATCH_SIZE));
+  const runBatch=async batch=>{
+    checkTask(task);
+    let lastErr=null;
+    for(let attempt=0;attempt<2;attempt++){
+      checkTask(task);
       try{
-        const raw = await callAPI(buildAnalysisMessages(batch));
-        const obj = parseJSON(raw);
-        const arr = Array.isArray(obj.sentences) ? obj.sentences : [];
-        batch.forEach((s,i) => {
-          const item = arr[i];
-          if(item && Array.isArray(item.segments) && item.segments.length){
-            s.data = item; s.status = 'ok'; s.error = '';
-          }else{
-            s.status = 'error'; s.error = '返回数据不完整';
-          }
+        const obj=parseJSON(await callAPI(buildAnalysisMessages(batch),{task,kind:'analysis'}));
+        checkTask(task);
+        const arr=Array.isArray(obj?.sentences)?obj.sentences:[];
+        batch.forEach((s,i)=>{
+          const item=arr[i];
+          if(item && Array.isArray(item.segments) && item.segments.length){ s.data=item;s.status='ok';s.error=''; }
+          else{ s.status='error';s.error='返回数据不完整'; }
         });
-        break;
+        lastErr=null; break;
       }catch(err){
-        lastErr = err;
-        /* 被 max_tokens 截断说明这一批太大：劈成两半分别重试，
-           而不是原样重试一次（原样重试必然再被截断，用户只能一句句手动重试）。 */
-        if(/截断/.test((err && err.message) || '') && batch.length > 1){
-          const mid = Math.ceil(batch.length / 2);
-          await runBatch(batch.slice(0, mid));
-          await runBatch(batch.slice(mid));
-          return;
+        if(isCanceled(err)) throw err;
+        lastErr=err;
+        if(/截断/.test(err.message) && batch.length>1){
+          const mid=Math.ceil(batch.length/2);
+          await runBatch(batch.slice(0,mid)); await runBatch(batch.slice(mid)); return;
         }
-        if(attempt === 0) await new Promise(r => setTimeout(r, 1200 + Math.random() * 600));
+        if(attempt===0) await abortableDelay(1200,task);
       }
     }
-    if(lastErr && batch.every(s => s.status !== 'ok')){
-      batch.forEach(s => { s.status = 'error'; s.error = lastErr.message; });
-    }
-    batch.forEach(s => { if(s.status === 'ok') fillSentence(s); else if(s.status === 'error') fillSentenceError(s); });
-    refreshProgress();
+    if(lastErr) batch.forEach(s=>{s.status='error';s.error=lastErr.message;});
+    batch.forEach(s=>s.status==='ok'?fillSentence(s):fillSentenceError(s));
+    saveArticleResult(); refreshProgress(total);
   };
-
-  const queue = batches.slice();
-  const workerCount = Math.max(1, Math.min(CONCURRENCY, queue.length));
-  const workers = Array.from({length: workerCount}, async () => {
-    while(queue.length) await runBatch(queue.shift());
+  const queue=batches.slice();
+  const workers=Array.from({length:Math.min(CONCURRENCY,queue.length)},async()=>{
+    while(queue.length){ checkTask(task); await runBatch(queue.shift()); }
   });
-  await Promise.all(workers);
+  // Finish all workers before enabling a new job; no old worker may update new state.
+  const results=await Promise.allSettled(workers);
+  const failed=results.find(r=>r.status==='rejected');
+  if(failed) throw failed.reason;
 }
-
 async function analyze(force){
-  if(state.analyzing) return;
-  if(!requireKey()) return;
-  const text = $('#articleInput').value.trim();
-  if(!text){ setStatus('请先粘贴文章或识别图片文字', 'err'); return; }
-  if(text.split(/\s+/).filter(Boolean).length > 1500){
-    if(!confirm('文章超过 1500 词，分析可能较慢且消耗较多 token，继续吗？')) return;
-  }
-
-  const cacheKey = cacheKeyFor(text);
+  if(state.analyzing || activeTask) return;
+  const text=$('#articleInput').value.trim();
+  if(!text){setStatus('请先粘贴文章或识别图片文字','err');return;}
+  if(text.split(/\s+/).length>1500 && !confirm('文章超过 1500 词，分析可能较慢且消耗较多 token，继续吗？')) return;
+  const cacheKey=cacheKeyFor(text);
+  let cached=null;
   if(!force){
-    let cached = null;
-    try{ cached = localStorage.getItem(cacheKey); }catch(_){}
-    if(cached){
-      try{
-        const obj = JSON.parse(cached);
-        if(obj && Array.isArray(obj.sentences) && obj.sentences.length){
-          loadResult(obj.sentences);
-          touchCacheIndex(cacheKey);      // 命中即算"访问过"，过期计时从这一刻重新开始
-          refreshCacheBtn();
-          /* 部分成功也会写缓存，所以命中时可能还缺几句：只补跑缺的那些，不重跑全部 */
-          const missing = state.sentences.filter(s => s.status !== 'ok');
-          if(!missing.length){
-            setStatus('已命中本地缓存，未消耗 API 额度（可点「重新分析」强制刷新）', 'ok');
-            return;
-          }
-          state.analyzing = true;
-          $('#analyzeBtn').disabled = true;
-          $('#analyzeBtn').textContent = '分析中…';
-          $('#reanalyzeBtn').style.display = 'none';
-          setStatus(`缓存命中 ${state.sentences.length - missing.length} 句，正在补跑剩余 ${missing.length} 句…`, 'busy');
-          try{
-            await runBatches(missing, state.sentences.length);
-            buildVocab(); renderVocab();
-            $('#printBtn').disabled = false;
-            saveCache(cacheKey, JSON.stringify({
-              v: 6,
-              sentences: state.sentences.map(s => ({text:s.text, data:s.data, para:s.para}))
-            }));
-            const stillBad = state.sentences.filter(s => s.status !== 'ok').length;
-            setStatus(stillBad ? `补齐完成，仍有 ${stillBad} 句失败（可在句内点「重试」）` : '已补齐剩余句子，其余来自本地缓存',
-                      stillBad ? 'err' : 'ok');
-          }catch(err){
-            setStatus('补跑失败：' + (err && err.message ? err.message : err), 'err');
-          }finally{
-            resetButtons();
-            hideProgressLater(2200);
-          }
-          return;
-        }
-      }catch(_){}
-      try{ localStorage.removeItem(cacheKey); }catch(_){}
-    }
+    try{cached=JSON.parse(localStorage.getItem(cacheKey)||'null');}catch(_){}
+    if(!Array.isArray(cached?.sentences) || !cached.sentences.length) cached=null;
   }
-
-  state.analyzing = true;
-  $('#analyzeBtn').disabled = true;
-  $('#analyzeBtn').textContent = '分析中…';
-  $('#reanalyzeBtn').style.display = 'none';
-
+  if(!cached && !requireKey()) return;
+  if(cached){
+    articleRevision++; state.articleCacheKey=cacheKey;
+    loadResult(cached.sentences); touchCacheIndex(cacheKey);refreshCacheBtn();
+    if(state.sentences.every(s=>s.status==='ok')){setStatus('已命中本地缓存，未消耗 API 额度','ok');return;}
+    if(!requireKey()) return;
+  }
+  const task=beginTask('analysis'); if(!task) return;
+  state.analyzing=true; $('#analyzeBtn').textContent='分析中…'; $('#reanalyzeBtn').style.display='none';
+  $('#cancelBtn').disabled=false;
+  let saved=true;
   try{
-    // 第一步：AI 断句（失败自动兜底本地规则）
-    let paras;
-    try{
-      paras = await splitArticle(text);
-    }catch(err){
-      setStatus(err.message, 'err');
-      hideProgress();
-      return;
+    if(!cached){
+      const paras=await splitArticle(text,task); checkTask(task);
+      if(!paras.length) throw new Error('未能识别出有效句子');
+      articleRevision++; state.articleCacheKey=cacheKey;
+      state.sentences=[];
+      paras.forEach((p,pi)=>p.forEach(t=>state.sentences.push({text:t,data:null,status:'pending',para:pi,error:'',grammar:null})));
+      rebuildParagraphs();renderArticleSkeleton();state.hasResult=true;
+      buildVocab();renderVocab();$('#printBtn').disabled=false;
     }
-    if(!paras.length){
-      setStatus('未能识别出有效句子', 'err');
-      hideProgress();
-      return;
-    }
-
-    state.sentences = [];
-    paras.forEach((p, pi) => p.forEach(t => {
-      state.sentences.push({text:t, data:null, status:'pending', para:pi, error:'', grammar:null});
-    }));
-    rebuildParagraphs();
-    renderArticleSkeleton();
-    setProgress(0, state.sentences.length, `断句完成，共 ${state.sentences.length} 句，开始逐句分析…`);
-
-    // 第二步：分批并发分析
-    const total = state.sentences.length;
-    await runBatches(state.sentences, total, 0);
-
-    state.hasResult = true;
-    const okSents = state.sentences.filter(s => s.status === 'ok');
-    const failed = total - okSents.length;
-
-    if(okSents.length){
-      buildVocab();
-      renderVocab();
-      $('#printBtn').disabled = false;
-      /* 部分成功也要缓存（只存成功的句子，下次失败的句子才需要重跑）。
-         以前只有全部成功才写缓存，一句失败就要把整篇重新分析、重复计费，
-         和缓存面板里「重看同一篇文章不消耗额度」的说明不符。 */
-      const saved = saveCache(cacheKey, JSON.stringify({
-        v: 6,
-        sentences: state.sentences.map(s => ({text:s.text, data:s.data, para:s.para}))
-      }));
-      if(!saved) setStatus('结果已生成，但浏览器缓存空间不足，本次未写入本地缓存', 'err');
-    }else{
-      buildVocab(); renderVocab();          // 清空侧栏，别留着上一篇的词
-      $('#printBtn').disabled = true;
-      setStatus('全部分析失败，请检查 API Key、余额或网络后重试', 'err');
-    }
-
-    if(okSents.length){
-      const fb = state.splitFallback ? `（${state.splitFallback}）` : '';
-      setStatus(
-        failed ? `完成：${okSents.length} 句成功，${failed} 句失败${fb}（可在句内点「重试」）`
-               : `分析完成，共 ${total} 句${fb}`,
-        failed ? 'err' : (state.splitFallback ? 'err' : 'ok')
-      );
-    }
-    if(failed) refreshProgress(); else setProgress(total, total, `已全部完成 · 共 ${total} 句`);
-    hideProgressLater(failed ? 6000 : 2200);
+    const missing=state.sentences.filter(s=>s.status!=='ok');
+    missing.forEach(s=>{s.status='pending';s.error='';});
+    setProgress(state.sentences.length-missing.length,state.sentences.length,'正在分析未完成的句子…');
+    await runBatches(missing,state.sentences.length,task);
+    const ok=state.sentences.filter(s=>s.status==='ok').length;
+    const bad=state.sentences.length-ok;
+    setStatus(ok?`完成：${ok} 句成功${bad?'，'+bad+' 句失败（可单独重试）':''}${state.splitFallback?'（本地规则断句）':''}`:'全部分析失败，请检查 API Key、余额或网络后重试',bad?'err':'ok');
+    refreshProgress();hideProgressLater(bad?6000:2200);
   }catch(err){
-    // 任何未预期的异常都不能让界面卡在「分析中」
-    setStatus('分析中断：' + (err && err.message ? err.message : err), 'err');
+    if(isCanceled(err)){
+      if(state.articleCacheKey===cacheKey){
+        state.sentences.filter(s=>s.status==='pending').forEach(s=>{s.status='error';s.error='已取消，可重试';fillSentenceError(s);});
+        const ok=state.sentences.filter(s=>s.status==='ok').length;
+        setStatus(`已取消，保留 ${ok} 句已完成结果；再次分析将补齐剩余句子`,'ok');
+      }else setStatus('已取消断句，尚未开始逐句分析','ok');
+    }else setStatus('分析中断：'+err.message,'err');
     hideProgress();
   }finally{
-    resetButtons();
+    if(state.articleCacheKey===cacheKey){
+      saved=saveArticleResult();buildVocab();renderVocab();$('#printBtn').disabled=!state.sentences.length;
+    }
+    endTask(task);refreshCacheBtn();
+    if(!saved) setStatus('结果已保留在页面，但浏览器缓存无法写入','err');
   }
 }
 
@@ -2013,12 +2053,16 @@ function fillSentenceError(s){
     e.stopPropagation();
     const i = +e.currentTarget.dataset.retry;
     const sent = state.sentences[i];
-    if(!sent || sent.status === 'pending') return;
+    if(!sent || sent.status === 'pending' || activeTask || !requireKey()) return;
+    const revision=articleRevision;
+    const task=beginTask('analysis');
+    $('#cancelBtn').disabled=false;
     sent.status = 'pending';
     btn.disabled = true;
     el.innerHTML = '<div class="sent-error" style="color:#8a919e">正在重试…</div>';
     try{
-      const raw = await callAPI(buildAnalysisMessages([sent]));
+      const raw = await callAPI(buildAnalysisMessages([sent]), {task,kind:'analysis'});
+      if(articleRevision!==revision || !state.sentences.includes(sent)) return;
       const obj = parseJSON(raw);
       const item = obj.sentences?.[0];
       if(item && Array.isArray(item.segments) && item.segments.length){
@@ -2026,15 +2070,19 @@ function fillSentenceError(s){
         fillSentence(sent);
         toggleSentence(i, true);
         buildVocab(); renderVocab();
-        setStatus('重试成功', 'ok');
+        $('#printBtn').disabled=false;
+        const saved=saveArticleResult();refreshCacheBtn();
+        setStatus(saved?'重试成功，已更新缓存':'重试成功，但缓存写入失败', saved?'ok':'err');
       }else{
         throw new Error('返回格式异常');
       }
     }catch(err){
-      sent.status = 'error'; sent.error = err.message;
-      fillSentenceError(sent);
-      setStatus('重试失败：' + err.message, 'err');
-    }
+      if(articleRevision===revision && state.sentences.includes(sent)){
+        sent.status = 'error'; sent.error = isCanceled(err)?'已取消，可重试':err.message;
+        fillSentenceError(sent);saveArticleResult();
+        setStatus(isCanceled(err)?'已取消重试':'重试失败：'+err.message,isCanceled(err)?'ok':'err');
+      }
+    }finally{endTask(task);}
   };
 }
 </script>
@@ -2186,11 +2234,11 @@ function alignClauses(sent, sentLower, clauses, tokens, legacyClauseSpans){
     for(let guard = 0; guard < 12; guard++){
       const cand = locateSpan(sent, sentLower, tokens, needle, from);
       if(!cand) break;
-      if(!used.some(u => cand.start < u.end && cand.end > u.start)){ r = cand; break; }
+      if(!used.some(u => cand.start === u.start && cand.end === u.end)){ r = cand; break; }
       from = cand.end;
     }
     if(!r) return;
-    used.push([r.start, r.end]);
+    used.push({start:r.start, end:r.end});
     raw.push({start:r.start, end:r.end, type, note:c.note ? String(c.note) : ''});
   });
   /* 旧格式补造：模型把从句类型写在 segments 里时，用已对齐的片段合并出跨度 */
@@ -2631,8 +2679,12 @@ function renderMarkdown(md){
 /* ============================================================
    语法精析（AI 逐层拆解，Markdown 输出）
    ============================================================ */
-function grammarCacheKey(sent){
-  return GRAM_CACHE_PRE + cyrb53(MODEL + '|' + sent + '|' + gramPromptFingerprint(gramPromptCfg));
+function buildGrammarMessages(sent, sObj){
+  const ctx=buildWordContext('',sent,sObj);ctx.sentence=sent;ctx.extra=gramPromptCfg.extra||'';
+  return [{role:'system',content:gramPromptCfg.system||GRAM_PROMPT_DEFAULT.system},{role:'user',content:fillPlaceholders(gramPromptCfg.user,ctx)}];
+}
+function grammarCacheKey(sent, sObj){
+  return GRAM_CACHE_PRE+cyrb53(MODEL+'|'+JSON.stringify(buildGrammarMessages(sent,sObj||state.sentences.find(s=>s.text===sent))));
 }
 function buildGrammarHTML(s){
   const idx = state.sentences.indexOf(s);
@@ -2713,7 +2765,7 @@ function attachLongPress(el, word, getSent){
     explainWord(text, getSent(), false, host ? state.sentences[+host.dataset.idx] : null);
   };
   el.addEventListener('pointerdown', e => {
-    if(e.pointerType === 'mouse' && e.button !== 0) return;   // 只认左键
+    if(e.altKey || (e.pointerType === 'mouse' && e.button !== 0)) return;   // 只认左键
     longFired = false;
     /* 必须在按下这一刻抓选区：鼠标一按下浏览器就把选区收掉了 */
     selAtDown = String(window.getSelection ? window.getSelection() : '').trim();
@@ -2815,7 +2867,7 @@ document.addEventListener('keydown', e => {
     clearPick();
     closeDictCard();
     /* 所有弹窗都要能被 Esc 关掉（提示词编辑器和缓存管理以前只能点关闭按钮） */
-    ['#keyModal','#wordModal','#promptModal','#cacheModal'].forEach(sel => {
+    ['#keyModal','#wordModal','#promptModal','#cacheModal','#bookModal','#usageModal','#imageModal'].forEach(sel => {
       const el = $(sel);
       if(el) el.classList.remove('show');
     });
@@ -3264,11 +3316,11 @@ async function openDictCard(unit, rawWord, phrase){
   el.classList.add('show');
   placeDictCard(el, unit.getBoundingClientRect());
 
-  if(dictState === 'idle'){
+  if(dictState === 'idle' || dictState === 'loading'){
     try{ await loadDict(); }
     catch(_){ /* 下面按 dictState 统一处理 */ }
   }
-  if(dictAnchor !== unit) return;               // 期间用户点了别的词
+  if(dictAnchor !== unit || dictWord !== word) return; // 同一词组内切换单词时也丢弃旧结果
   if(dictState !== 'ready'){
     el.innerHTML = `<div class="dc-head"><b>${esc(word)}</b></div>
       <div class="dc-empty">本地词典不可用：${esc(dictErr || '未知原因')}</div>
@@ -3282,6 +3334,9 @@ async function openDictCard(unit, rawWord, phrase){
 
 function bindDictCard(el, word, unit){
   const sObj = unit ? (() => { const se = unit.closest('.p-sent'); return se ? state.sentences[+se.dataset.idx] : null; })() : null;
+  const collect = document.createElement('button');collect.className='mini-btn';collect.textContent='收藏到生词本';
+  collect.onclick=e=>{e.stopPropagation();collectWord(word,sObj);};
+  (el.querySelector('.dc-actions') || el).appendChild(collect);
   const ai = el.querySelector('[data-dc-ai]');
   if(ai) ai.onclick = e => {
     e.stopPropagation();
@@ -3399,6 +3454,7 @@ function gramPromptIssues(userTpl){
 /* AI 弹窗只放 AI 的内容：用户是长按/双击主动要 AI 解析的，
    本地词条已经在单击的释义卡里给过了，不必再挤一份进来。 */
 function openWordModal(word, sent){
+  wordModalMeaning = '';
   closeDictCard();               // 弹窗接管，别让释义卡留在下面挡着
   $('#wmWord').textContent = word;
   $('#wmSent').textContent = sent || '';
@@ -3428,8 +3484,9 @@ async function explainWord(word, sent, force, sentObj){
     openKeyModal();
     return;
   }
-  const fp = promptFingerprint(promptCfg);
-  const cacheKey = WORD_CACHE_PRE + cyrb53(MODEL + '|' + word.toLowerCase() + '|' + sent + '|' + fp);
+  const ctx = buildWordContext(word, sent, sObj);
+  const messages = [{role:'system',content:promptCfg.system || WORD_PROMPT_DEFAULT.system},{role:'user',content:fillPlaceholders(promptCfg.user,ctx)}];
+  const cacheKey = WORD_CACHE_PRE + cyrb53(MODEL + '|' + JSON.stringify(messages));
   if(!force){
     let cached = null;
     try{ cached = localStorage.getItem(cacheKey); }catch(_){}
@@ -3444,10 +3501,7 @@ async function explainWord(word, sent, force, sentObj){
     }
   }
   try{
-    const ctx = buildWordContext(word, sent, sObj);
-    const sys = promptCfg.system || WORD_PROMPT_DEFAULT.system;
-    const user = fillPlaceholders(promptCfg.user, ctx);
-    const raw = await callAPI([{role:'system', content:sys}, {role:'user', content:user}], {maxTokens:2048});
+    const raw = await callAPI(messages, {maxTokens:2048,kind:'word'});
     const obj = parseJSON(raw);
     /* 只有「能用」的返回才写缓存。空对象或全是不认识字段的返回一旦写进去，
        以后每次双击都直接读缓存显示「未获取到有效解析」，再也不会重新问 API。 */
@@ -3503,6 +3557,7 @@ function wmRenderValue(val){
   return `<p>${esc(String(val))}</p>`;
 }
 function renderWordModal(obj){
+  wordModalMeaning = typeof obj?.meaning === 'string' ? obj.meaning : '';
   const put = inner => { $('#wmBody').innerHTML = inner; };
   if(obj == null){ put('<div class="wm-err">未获取到有效解析</div>'); return; }
   /* 非对象（AI 直接返回一段文字）就原样显示 */
@@ -3537,11 +3592,11 @@ const gramSeq = new WeakMap();      // 每句一个序号，避免旧请求覆�
 
 async function explainGrammar(s, force){
   const idx = state.sentences.indexOf(s);
-  if(idx < 0) return;
+  if(idx < 0 || (s.grammar?.status==='loading' && !force)) return;
   if(!requireKey()) return;
   const sent = String(s.text || '').trim();
   if(!sent) return;
-  const cacheKey = grammarCacheKey(sent);
+  const cacheKey = grammarCacheKey(sent, s);
   const mySeq = (gramSeq.get(s) || 0) + 1;
   gramSeq.set(s, mySeq);
 
@@ -3568,22 +3623,16 @@ async function explainGrammar(s, force){
   const host = $('#article').querySelector(`.p-sent[data-idx="${idx}"]`);
   if(host) host.classList.add('open');
   try{
-    const sentObj = s;
-    const ctx = buildWordContext('', sent, sentObj);
-    ctx.sentence = sent;
-    ctx.extra = gramPromptCfg.extra || '';
-    const sys = gramPromptCfg.system || GRAM_PROMPT_DEFAULT.system;
-    const user = fillPlaceholders(gramPromptCfg.user, ctx);
-    const raw = await callAPI([{role:'system', content:sys}, {role:'user', content:user}], {json:false, maxTokens:4096});
+    const raw = await callAPI(buildGrammarMessages(sent,s), {json:false,maxTokens:4096,kind:'grammar'});
     const md = String(raw || '').trim();
     if(!md) throw new Error('返回内容为空');
-    if(gramSeq.get(s) !== mySeq) return;              // 期间又发了新请求，丢弃这次结果
+    if(gramSeq.get(s) !== mySeq || !state.sentences.includes(s)) return;              // 期间又发了新请求，丢弃这次结果
     s.grammar = {status:'ok', md, error:''};
     paintGrammar(idx);
     saveCache(cacheKey, JSON.stringify({v:1, md}));
     setStatus('语法精析完成', 'ok');
   }catch(err){
-    if(gramSeq.get(s) !== mySeq) return;
+    if(gramSeq.get(s) !== mySeq || !state.sentences.includes(s)) return;
     s.grammar = {status:'error', md:'', error:(err && err.message) || String(err)};
     paintGrammar(idx);
     setStatus('语法精析失败：' + s.grammar.error, 'err');
@@ -3797,6 +3846,7 @@ $('#pmSave').onclick = () => {
                 extra:$('#pfExtra').value.trim()};
   if(pmTab === 'grammar'){
     gramPromptCfg = next;
+    state.sentences.forEach((s,i) => { gramSeq.set(s,(gramSeq.get(s)||0)+1);s.grammar=null;paintGrammar(i); });
     try{ localStorage.setItem('ds_gram_prompt', JSON.stringify(gramPromptCfg)); }catch(_){}
     $('#promptModal').classList.remove('show');
     setStatus(gramPromptIsDefault() ? '语法精析已恢复默认提示词' : '已保存语法精析提示词', 'ok');
@@ -3863,6 +3913,8 @@ $('#moreMenu').addEventListener('click', e => {
   else if(act === 'print'){ if(!$('#printBtn').disabled) $('#printBtn').click(); else setStatus('还没有可打印的分析结果', 'err'); }
   else if(act === 'cache') openCacheModal();
   else if(act === 'prompt') openPromptModal();
+  else if(act === 'book') openBook();
+  else if(act === 'usage') openUsage();
 });
 document.addEventListener('click', closeMoreMenu);
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeMoreMenu(); });
@@ -3886,6 +3938,288 @@ function ensureAllBuilt(){
 }
 window.addEventListener('beforeprint', ensureAllBuilt);
 $('#printBtn').onclick = () => { ensureAllBuilt(); window.print(); };
+
+/* Permanent vocabulary data: deliberately outside CACHE_KEY_RE / cache TTL. */
+const BOOK_KEY='ds_vocab_book_v1';
+let studyId=0;
+function newStudyId(){return globalThis.crypto?.randomUUID?.() || Date.now().toString(36)+'-'+(++studyId)+'-'+Math.random().toString(36).slice(2);}
+function blankBook(){return {version:1,defaultFolderId:'inbox',folders:[{id:'inbox',name:'未分类'}],entries:[]};}
+function vocabKey(word){return String(word||'').replace(/[’‘]/g,"'").replace(/\s+/g,' ').trim().toLowerCase();}
+function validateBook(value){
+  if(value?.version!==1 || !Array.isArray(value.folders) || !Array.isArray(value.entries)) throw new Error('不是支持的生词本备份');
+  const folderIds=new Set(),names=new Set(),entryIds=new Set(),keys=new Set();
+  const folders=value.folders.map(f=>{
+    if(typeof f?.id!=='string' || !f.id || typeof f.name!=='string' || !f.name.trim() || folderIds.has(f.id)) throw new Error('文件夹数据重复或无效');
+    const name=f.id==='inbox'?'未分类':f.name.trim();
+    if(names.has(name))throw new Error('文件夹名称重复');
+    folderIds.add(f.id);names.add(name);return {id:f.id,name};
+  });
+  if(!folderIds.has('inbox') || !folderIds.has(value.defaultFolderId)) throw new Error('缺少默认文件夹');
+  const entries=value.entries.map(e=>{
+    if(typeof e?.id!=='string' || !e.id || entryIds.has(e.id) || !folderIds.has(e.folderId) || typeof e.word!=='string' || !e.word.trim() || !Array.isArray(e.contexts)) throw new Error('词条数据无效');
+    const key=vocabKey(e.word),unique=e.folderId+'\n'+key;
+    if(keys.has(unique)) throw new Error('备份含重复词条');
+    keys.add(unique);entryIds.add(e.id);
+    for(const k of ['meaning','phonetic','note']) if(typeof e[k]!=='string') throw new Error('词条字段无效');
+    const contexts=e.contexts.map(c=>{
+      if(!c || ['sentence','trans','meaning'].some(k=>typeof c[k]!=='string')) throw new Error('原句字段无效');
+      return {sentence:c.sentence,trans:c.trans,meaning:c.meaning};
+    });
+    return {id:e.id,folderId:e.folderId,word:e.word.trim(),key,meaning:e.meaning,phonetic:e.phonetic,note:e.note,contexts,createdAt:Number(e.createdAt)||Date.now(),updatedAt:Number(e.updatedAt)||Date.now()};
+  });
+  return {version:1,defaultFolderId:value.defaultFolderId,folders,entries};
+}
+let vocabBook,bookLoadError='';
+try{
+  const raw=localStorage.getItem(BOOK_KEY);
+  vocabBook=raw?validateBook(JSON.parse(raw)):blankBook();
+}catch(e){vocabBook=blankBook();bookLoadError='生词本读取失败，请先备份或恢复；原数据未被覆盖。';}
+let bookFolder=vocabBook.defaultFolderId,bookSelection=new Set();
+function commitBook(next){
+  if(bookLoadError){alert(bookLoadError+' 可导出原始数据备份后，使用恢复功能修复。');return false;}
+  try{localStorage.setItem(BOOK_KEY,JSON.stringify(next));}
+  catch(_){setStatus('生词本保存失败：浏览器存储不可用或空间不足，请先备份','err');alert('生词本未保存。浏览器存储不可用或空间不足，请备份后再试。');return false;}
+  vocabBook=next;renderBook();return true;
+}
+function changeBook(fn){const next=JSON.parse(JSON.stringify(vocabBook));fn(next);return commitBook(next);}
+function mergeEntry(target,source){
+  if(!target.meaning) target.meaning=source.meaning;
+  if(!target.phonetic) target.phonetic=source.phonetic;
+  if(source.note && source.note!==target.note) target.note=[target.note,source.note].filter(Boolean).join('\n');
+  source.contexts.forEach(c=>{if(!target.contexts.some(x=>x.sentence===c.sentence && x.trans===c.trans && x.meaning===c.meaning)) target.contexts.push(c);});
+  target.updatedAt=Date.now();
+}
+function moveBookEntries(book,ids,folderId){
+  for(const id of ids){
+    const e=book.entries.find(x=>x.id===id);if(!e || e.folderId===folderId) continue;
+    const existing=book.entries.find(x=>x.folderId===folderId && x.key===e.key);
+    if(existing){mergeEntry(existing,e);book.entries=book.entries.filter(x=>x!==e);}
+    else{e.folderId=folderId;e.updatedAt=Date.now();}
+  }
+}
+function deleteBookFolder(book,id){
+  if(id==='inbox') return;
+  moveBookEntries(book,book.entries.filter(e=>e.folderId===id).map(e=>e.id),'inbox');
+  book.folders=book.folders.filter(f=>f.id!==id);
+  if(book.defaultFolderId===id) book.defaultFolderId='inbox';
+}
+async function collectWord(raw,sObj,aiMeaning=''){
+  const word=String(raw||'').replace(/^[\s.,;:!?()"“”]+|[\s.,;:!?()"“”]+$/g,'').trim();
+  if(!/[A-Za-z]/.test(word)) return;
+  let res=null;
+  try{await loadDict();res=dictLookup(word);}catch(_){}
+  const exact=(sObj?.data?.gloss||[]).find(g=>vocabKey(g?.w)===vocabKey(word));
+  const meaning=String(aiMeaning || exact?.t || (res?.entry.tr||'').split('|').join('\n'));
+  const context={sentence:sObj?.text||'',trans:String(sObj?.data?.trans||''),meaning};
+  const key=vocabKey(word);
+  // Read the default after the dictionary await: rapid clicks and folder changes merge safely.
+  const ok=changeBook(book=>{
+    const incoming={id:newStudyId(),folderId:book.defaultFolderId,word,key,meaning,phonetic:res?.entry.ph||'',note:'',contexts:context.sentence?[context]:[],createdAt:Date.now(),updatedAt:Date.now()};
+    const existing=book.entries.find(e=>e.folderId===incoming.folderId && e.key===key);
+    if(existing) mergeEntry(existing,incoming); else book.entries.push(incoming);
+  });
+  if(ok) toast(`已收藏「${word}」到 ${vocabBook.folders.find(f=>f.id===vocabBook.defaultFolderId).name}`);
+}
+function bookVisibleEntries(){
+  const q=vocabKey($('#bookSearch')?.value||'');
+  return vocabBook.entries.filter(e=>(bookFolder==='all' || e.folderId===bookFolder) && (!q || vocabKey(e.word+' '+e.meaning+' '+e.note).includes(q)));
+}
+function folderOptions(selected){return vocabBook.folders.map(f=>`<option value="${escA(f.id)}"${f.id===selected?' selected':''}>${esc(f.name)}</option>`).join('');}
+function renderBook(){
+  if(!$('#bookFolders')) return;
+  if(bookFolder!=='all' && !vocabBook.folders.some(f=>f.id===bookFolder)) bookFolder='inbox';
+  $('#bookFolders').innerHTML=[{id:'all',name:'全部'},...vocabBook.folders].map(f=>`<button class="folder-btn ${bookFolder===f.id?'on':''}" data-folder="${escA(f.id)}">${esc(f.name)}${f.id===vocabBook.defaultFolderId?' ★':''}<span>${vocabBook.entries.filter(e=>f.id==='all'||e.folderId===f.id).length}</span></button>`).join('');
+  $('#bookDefault').innerHTML=folderOptions(vocabBook.defaultFolderId);
+  $('#bookMove').innerHTML=folderOptions(bookFolder==='all'?'inbox':bookFolder);
+  $('#bookRename').disabled=bookFolder==='all'||bookFolder==='inbox';
+  $('#bookDeleteFolder').disabled=bookFolder==='all'||bookFolder==='inbox';
+  const entries=bookVisibleEntries();
+  $('#bookCount').textContent=`${entries.length} 个词条 · 已选 ${bookSelection.size} 个`;
+  $('#bookEntries').innerHTML=entries.map(e=>`<article class="book-entry"><label class="book-word"><input type="checkbox" data-book-select="${escA(e.id)}"${bookSelection.has(e.id)?' checked':''}> <strong>${esc(e.word)}</strong><span>${esc(e.phonetic)}</span></label><p class="book-meaning">${esc(e.meaning||'暂无释义，可展开编辑')}</p><details><summary>${e.contexts.length} 条原句 · 编辑词条</summary>${e.contexts.map(c=>`<blockquote>${esc(c.sentence)}<small>${esc(c.trans)}</small><small>${esc(c.meaning)}</small></blockquote>`).join('')}<label>释义<textarea data-book-meaning="${escA(e.id)}" rows="3">${esc(e.meaning)}</textarea></label><label>笔记<textarea data-book-note="${escA(e.id)}" rows="2">${esc(e.note)}</textarea></label><div class="study-actions"><button class="btn" data-book-save="${escA(e.id)}">保存编辑</button><button class="btn" data-book-delete="${escA(e.id)}">删除词条</button></div></details></article>`).join('') || '<p class="study-empty">这里还没有生词。Alt＋左键点击原文单词即可收藏。</p>';
+  $('#bookWarning').textContent=bookLoadError;
+}
+function openBook(){renderBook();$('#bookModal').classList.add('show');$('#bookSearch').focus();}
+function downloadText(filename,text,type='text/plain;charset=utf-8'){
+  const url=URL.createObjectURL(new Blob([text],{type}));
+  const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function ankiText(entries,book=vocabBook){
+  const textHTML=s=>esc(s).replace(/\r?\n/g,'<br>');
+  const field=s=>'"'+String(s).replace(/"/g,'""')+'"';
+  const deckName=name=>String(name).replace(/:/g,'：').replace(/[\r\n\t]/g,' ').trim();
+  const rows=entries.map(e=>{
+    const back=[e.phonetic?`<div>[${textHTML(e.phonetic)}]</div>`:'',`<div>${textHTML(e.meaning)}</div>`,e.note?`<p>笔记：${textHTML(e.note)}</p>`:'',...e.contexts.map(c=>`<hr><div>${textHTML(c.sentence)}</div><div>${textHTML(c.trans)}</div><div>${textHTML(c.meaning)}</div>`)].join('');
+    const folder=book.folders.find(f=>f.id===e.folderId)?.name||'未分类';
+    return [textHTML(e.word),back,'考研生词::'+deckName(folder)].map(field).join('\t');
+  });
+  return '#separator:Tab\n#html:true\n#columns:Front\tBack\tDeck\n#deck column:3\n'+rows.join('\n')+'\n';
+}
+function exportAnki(scope){
+  const entries=scope==='all'?vocabBook.entries:scope==='selected'?vocabBook.entries.filter(e=>bookSelection.has(e.id)):vocabBook.entries.filter(e=>bookFolder==='all'||e.folderId===bookFolder);
+  if(!entries.length){toast('没有可导出的词条');return;}
+  downloadText('考研生词-Anki.txt',ankiText(entries));
+}
+function initStudyUI(){
+  $('#bookBtn').onclick=openBook;$('#usageBtn').onclick=openUsage;$('#cancelBtn').onclick=cancelActiveTask;
+  $('#wmCollect').onclick=()=>collectWord($('#wmWord').textContent,state.sentences.find(s=>s.text===$('#wmSent').textContent),wordModalMeaning);
+  for(const id of ['bookModal','usageModal']){
+    const mask=$('#'+id);mask.addEventListener('click',e=>{if(e.target===mask)mask.classList.remove('show');});
+    mask.querySelector('[data-study-close]').onclick=()=>mask.classList.remove('show');
+  }
+  $('#bookSearch').oninput=()=>{bookSelection.clear();renderBook();};
+  $('#bookFolders').onclick=e=>{const b=e.target.closest('[data-folder]');if(b){bookFolder=b.dataset.folder;bookSelection.clear();renderBook();}};
+  $('#bookDefault').onchange=e=>{if(!changeBook(book=>book.defaultFolderId=e.target.value))renderBook();};
+  $('#bookNew').onclick=()=>{
+    const name=prompt('新文件夹名称')?.trim();if(!name)return;
+    if(vocabBook.folders.some(f=>f.name===name)){alert('文件夹名称已存在');return;}
+    const id=newStudyId();if(changeBook(book=>book.folders.push({id,name}))){bookFolder=id;renderBook();}
+  };
+  $('#bookRename').onclick=()=>{
+    const folder=vocabBook.folders.find(f=>f.id===bookFolder);if(!folder||folder.id==='inbox')return;
+    const name=prompt('重命名文件夹',folder.name)?.trim();if(!name)return;
+    if(vocabBook.folders.some(f=>f.id!==folder.id && f.name===name)){alert('文件夹名称已存在');return;}
+    changeBook(book=>book.folders.find(f=>f.id===folder.id).name=name);
+  };
+  $('#bookDeleteFolder').onclick=()=>{
+    if(bookFolder==='inbox'||bookFolder==='all')return;
+    if(!confirm('删除这个分类？其中的词条将移入“未分类”，相同单词会合并。'))return;
+    if(changeBook(book=>deleteBookFolder(book,bookFolder))){bookFolder='inbox';bookSelection.clear();renderBook();}
+  };
+  $('#bookSelectAll').onclick=()=>{const ids=bookVisibleEntries().map(e=>e.id);const all=ids.every(id=>bookSelection.has(id));ids.forEach(id=>all?bookSelection.delete(id):bookSelection.add(id));renderBook();};
+  $('#bookMoveBtn').onclick=()=>{if(changeBook(book=>moveBookEntries(book,[...bookSelection],$('#bookMove').value))){bookSelection.clear();renderBook();}};
+  $('#bookEntries').onchange=e=>{if(e.target.dataset.bookSelect){const id=e.target.dataset.bookSelect;e.target.checked?bookSelection.add(id):bookSelection.delete(id);$('#bookCount').textContent=`${bookVisibleEntries().length} 个词条 · 已选 ${bookSelection.size} 个`;}};
+  $('#bookEntries').onclick=e=>{
+    const save=e.target.closest('[data-book-save]'),del=e.target.closest('[data-book-delete]');
+    if(save){const id=save.dataset.bookSave;const article=save.closest('article');const meaning=article.querySelector('[data-book-meaning]').value,note=article.querySelector('[data-book-note]').value;changeBook(book=>{const item=book.entries.find(x=>x.id===id);item.meaning=meaning;item.note=note;item.updatedAt=Date.now();});}
+    if(del && confirm('删除这个词条及其原句？')){const id=del.dataset.bookDelete;if(changeBook(book=>book.entries=book.entries.filter(x=>x.id!==id))){bookSelection.delete(id);renderBook();}}
+  };
+  $$('[data-anki-export]').forEach(b=>b.onclick=()=>exportAnki(b.dataset.ankiExport));
+  $('#bookBackup').onclick=()=>{
+    let raw=null;try{raw=localStorage.getItem(BOOK_KEY);}catch(_){}
+    downloadText('考研生词本备份.json',bookLoadError && raw?raw:JSON.stringify(vocabBook,null,2),'application/json');
+  };
+  $('#bookRestore').onchange=async e=>{
+    const file=e.target.files?.[0];e.target.value='';if(!file)return;
+    try{
+      if(file.size>10*1024*1024)throw new Error('备份文件过大（最多 10 MB）');
+      const book=validateBook(JSON.parse(await file.text()));
+      if(!confirm(`恢复备份将替换当前生词本（${book.entries.length} 个词条）。确定继续？`))return;
+      const oldError=bookLoadError;bookLoadError='';
+      if(commitBook(book)){bookFolder=book.defaultFolderId;bookSelection.clear();renderBook();toast('生词本已恢复');}
+      else bookLoadError=oldError;
+    }catch(err){alert('恢复失败：'+err.message);}
+  };
+  $('#ratePreset').onchange=e=>{const preset=RATE_PRESETS[e.target.value];if(preset)['hit','miss','out'].forEach(k=>$('#rate'+k).value=preset[k]);};
+  $('#rateSave').onclick=()=>{
+    const next=Object.fromEntries(['hit','miss','out'].map(k=>[k,Number($('#rate'+k).value)]));
+    if(!validRates(next) || ['hit','miss','out'].some(k=>!$('#rate'+k).value.trim())){alert('请输入非负数单价');return;}
+    try{localStorage.setItem(RATE_KEY,JSON.stringify(next));rates=next;toast('费率已保存，已记录费用保持原费率');}
+    catch(_){alert('费率保存失败，浏览器存储不可用');}
+  };
+  document.addEventListener('click',e=>{
+    if(!e.altKey || e.button!==0)return;
+    const wordEl=e.target.closest('.p-word,.unit.clickable,.vi[data-vk]');if(!wordEl)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    let word,sObj;
+    if(wordEl.matches('.vi')){word=wordEl.querySelector('.vw').textContent;sObj=state.sentences.find(s=>(s.data?.gloss||[]).some(g=>vocabKey(g.w)===vocabKey(word)));}
+    else{sObj=state.sentences[+wordEl.closest('.p-sent').dataset.idx];word=wordEl.dataset.w || wordAtPoint(e.clientX,e.clientY) || wordEl.querySelector('.w')?.textContent;}
+    collectWord(word,sObj);
+  },true);
+}
+let wordModalMeaning='';
+
+function addImages(files){
+  if(activeTask){toast('请先完成或取消当前任务');return;}
+  const list=(files||[]).filter(isImageFile);if(!list.length){setStatus('没有识别到可用图片','err');return;}
+  list.forEach(file=>{
+    const page={id:newStudyId(),name:file.name||'截图',dataUrl:'',originalUrl:'',status:'processing',text:'',error:''};
+    state.images.push(page);imgBusy++;
+    const rd=new FileReader();
+    const finish=(dataUrl,error='')=>{
+      imgBusy--;
+      if(state.images.includes(page)){page.dataUrl=dataUrl;page.status=error?'error':'ready';page.error=error;}
+      renderImgList();$('#ocrBtn').disabled=imgBusy>0||!!activeTask;
+      if(!imgBusy)setStatus('图片处理完成，请排序后识别','ok');
+    };
+    rd.onload=()=>{page.originalUrl=rd.result;compressImage(rd.result,dataUrl=>finish(dataUrl));};
+    rd.onerror=()=>finish('','图片读取失败，请移除后重新上传');
+    rd.readAsDataURL(file);
+  });
+  renderImgList();$('#ocrBtn').disabled=true;setStatus('正在处理图片…','busy');
+}
+function moveOcrPage(id,beforeId){
+  if(activeTask)return;
+  const page=state.images.find(p=>p.id===id),target=state.images.find(p=>p.id===beforeId);
+  if(!page||!target||page===target)return;
+  const from=state.images.indexOf(page),to=state.images.indexOf(target);
+  state.images.splice(from,1);state.images.splice(to,0,page);renderImgList();
+}
+function renderImgList(){
+  if(!$('#imgList'))return;
+  const locked=!!activeTask;
+  $('#imgList').innerHTML=state.images.map((p,i)=>`<div class="ocr-page" data-page-id="${escA(p.id)}" draggable="${!locked}"><div class="ocr-preview">${p.dataUrl?`<button class="image-zoom" data-zoom="${escA(p.id)}" aria-label="放大第 ${i+1} 页"><img src="${escA(p.dataUrl)}" alt="第 ${i+1} 页"></button>`:'<p>正在处理图片…</p>'}</div><div class="ocr-page-body"><div class="ocr-page-head"><b>第 ${i+1} 页</b><span>${esc(p.name)}</span><button class="mini-btn" data-page-up="${escA(p.id)}"${locked||i===0?' disabled':''} aria-label="上移第 ${i+1} 页">↑</button><button class="mini-btn" data-page-down="${escA(p.id)}"${locked||i===state.images.length-1?' disabled':''} aria-label="下移第 ${i+1} 页">↓</button><button class="mini-btn" data-page-remove="${escA(p.id)}"${locked?' disabled':''}>移除</button></div><label>校对文字<textarea data-page-text="${escA(p.id)}" rows="6" placeholder="识别后可在这里校对"${p.status==='loading'?' disabled':''}>${esc(p.text)}</textarea></label><div class="ocr-page-foot"><span>${p.status==='processing'?'图片处理中':p.status==='loading'?'正在识别…':p.error?esc(p.error):p.status==='ok'?'识别完成，可校对':'等待识别'}</span>${p.dataUrl?`<button class="mini-btn" data-page-retry="${escA(p.id)}"${locked||imgBusy?' disabled':''}>${p.status==='ok'?'重新识别本页':'识别／重试本页'}</button>`:''}</div></div></div>`).join('');
+  $('#ocrApply').hidden=!state.images.length;
+  $('#ocrAppend').disabled=locked;$('#ocrReplace').disabled=locked;
+}
+async function startOcr(pageId){
+  if(activeTask||imgBusy)return;
+  if(!requireKey())return;
+  let pages=pageId?state.images.filter(p=>p.id===pageId && p.dataUrl):state.images.filter(p=>p.dataUrl && p.status!=='ok');
+  if(!pages.length){setStatus('没有待识别图片；已完成的文字可直接校对或应用','ok');return;}
+  if(pageId && pages[0].text && !confirm('重新识别将替换本页已校对的文字。继续吗？'))return;
+  const task=beginTask('ocr');if(!task)return;$('#cancelBtn').disabled=false;
+  $('#ocrBtn').textContent='识别中…';
+  let done=0;
+  try{
+    for(const page of pages){
+      checkTask(task);page.status='loading';page.error='';renderImgList();
+      setProgress(done,pages.length,`正在识别第 ${state.images.indexOf(page)+1} 页（${done+1}/${pages.length}）`);
+      try{
+        const text=(await callAPI([{role:'user',content:[{type:'text',text:'请逐字转录图片中的英文文章正文。只输出英文原文，保留拼写、大小写和标点；段落之间用空行分隔。不输出解释、翻译、markdown 标记。'}, {type:'image_url',image_url:{url:page.dataUrl}}]}],{json:false,task,kind:'ocr'})).trim();
+        checkTask(task);if(!text)throw new Error('识别结果为空');page.text=text;page.status='ok';
+      }catch(err){if(isCanceled(err)){page.status=page.text?'ok':'ready';throw err;}page.status='error';page.error=err.message;}
+      done++;renderImgList();
+    }
+    const bad=pages.filter(p=>p.status==='error').length;
+    setStatus(`识别完成${bad?'，'+bad+' 页失败，可单独重试':''}；请对照原图校对后追加或替换正文`,bad?'err':'ok');
+  }catch(err){setStatus(isCanceled(err)?'已取消识别，已完成页面和校对文字均保留':'识别失败：'+err.message,isCanceled(err)?'ok':'err');}
+  finally{$('#ocrBtn').textContent='识别图片文字';hideProgress();endTask(task);}
+}
+function applyOcrText(replace){
+  if(activeTask)return;
+  const text=state.images.map(p=>p.text.trim()).filter(Boolean).join('\n\n');
+  if(!text){setStatus('没有可应用的识别文字','err');return;}
+  if(state.images.some(p=>!p.text.trim()) && !confirm('有图片尚无文字，只应用已识别／校对的页面？'))return;
+  const existing=$('#articleInput').value.trim();
+  if(replace && existing && !confirm('替换会覆盖当前正文。确定继续？'))return;
+  $('#articleInput').value=replace?text:[existing,text].filter(Boolean).join('\n\n');selectTab('text');
+  setStatus('校对文字已'+(replace?'替换':'追加到')+'正文，可开始分析','ok');
+}
+function initOcrUI(){
+  $('#ocrAppend').onclick=()=>applyOcrText(false);$('#ocrReplace').onclick=()=>applyOcrText(true);
+  const list=$('#imgList');
+  list.addEventListener('input',e=>{const id=e.target.dataset.pageText;if(id){const p=state.images.find(x=>x.id===id);if(p)p.text=e.target.value;}});
+  list.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    const d=b.dataset;
+    if(d.zoom){const p=state.images.find(x=>x.id===d.zoom);if(p){$('#zoomImage').src=p.originalUrl||p.dataUrl;$('#imageModal').classList.add('show');}return;}
+    if(activeTask)return;
+    if(d.pageRetry){startOcr(d.pageRetry);return;}
+    const id=d.pageUp||d.pageDown||d.pageRemove,i=state.images.findIndex(x=>x.id===id);if(i<0)return;
+    if(d.pageRemove){if(state.images[i].text && !confirm('移除本页及校对文字？'))return;state.images.splice(i,1);}
+    else{const j=i+(d.pageUp?-1:1);if(j>=0 && j<state.images.length)[state.images[i],state.images[j]]=[state.images[j],state.images[i]];}
+    renderImgList();
+  });
+  let dragged='';
+  list.addEventListener('dragstart',e=>{const page=e.target.closest('[data-page-id]');if(activeTask||!page){e.preventDefault();return;}dragged=page.dataset.pageId;e.dataTransfer.setData('text/plain',dragged);});
+  list.addEventListener('dragover',e=>{if(dragged && !activeTask)e.preventDefault();});
+  list.addEventListener('drop',e=>{const target=e.target.closest('[data-page-id]');if(target && dragged){e.preventDefault();moveOcrPage(dragged,target.dataset.pageId);}dragged='';});
+  list.addEventListener('dragend',()=>dragged='');
+  $('#imageModal').onclick=e=>{if(e.target.id==='imageModal'||e.target.closest('[data-study-close]'))$('#imageModal').classList.remove('show');};
+}
+
+initStudyUI();initOcrUI();
 
 /* 标注区字体偏好默认值 */
 if(!restore('ds_pref_font', null)) fontMode = 'prose';
