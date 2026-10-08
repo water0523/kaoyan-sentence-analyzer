@@ -116,23 +116,55 @@ test('cancel in-flight split via UI and start a new task safely',async()=>{
     assert.equal(calls,1);assert.equal(await page.evaluate(()=>state.sentences.length),0);assert.equal(await page.locator('#analyzeBtn').isEnabled(),true);assert.match(await page.locator('#status').innerText(),/已取消断句/);assert.deepEqual(errors,[]);
   }finally{await context.close();}
 });
-test('OCR upload, reordering, per-page error/retry, correction append/replace and zoom',async()=>{
-  const {page,context,errors}=await pageFixture();let call=0;
+test('compact OCR thumbnails reorder and automatically replace text / return to text tab',async()=>{
+  const {page,context,errors}=await pageFixture();let calls=0,dialogs=0;
+  page.on('dialog',async d=>{dialogs++;await d.dismiss();});
+  try{
+    await page.locator('#articleInput').fill('Existing article.');await page.locator('[data-tab="image"]').click();
+    const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j3ioAAAAASUVORK5CYII=','base64');
+    await page.locator('#fileInput').setInputFiles([{name:'first.png',mimeType:'image/png',buffer:png},{name:'second.png',mimeType:'image/png',buffer:png}]);await page.waitForFunction(()=>imgBusy===0);
+    assert.equal(await page.locator('#imgList textarea').count(),0);assert.equal(await page.locator('#ocrApply').count(),0);
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('.img-item')).transform==='none');const rect=await page.locator('.img-item').first().boundingBox();assert.equal(rect.width,96);assert.equal(rect.height,96);
+    await page.locator('.img-item').nth(0).dragTo(page.locator('.img-item').nth(1));assert.deepEqual(await page.evaluate(()=>state.images.map(p=>p.name)),['second.png','first.png']);
+    await page.locator('.img-item').nth(0).focus();await page.keyboard.press('ArrowRight');assert.deepEqual(await page.evaluate(()=>state.images.map(p=>p.name)),['first.png','second.png']);
+    await page.keyboard.press('ArrowLeft');assert.deepEqual(await page.evaluate(()=>state.images.map(p=>p.name)),['second.png','first.png']);
+    await page.waitForTimeout(450);await page.locator('[data-zoom]').first().click();assert.equal(await page.locator('#zoomImage').isVisible(),true);await page.keyboard.press('Escape');
+    fs.mkdirSync(path.join(__dirname,'../test-results'),{recursive:true});await page.screenshot({path:path.join(__dirname,'../test-results/desktop-ocr-simple.png')});
+    await page.unroute('https://api.deepseek.com/**');await page.route('https://api.deepseek.com/**',route=>route.fulfill({json:reply(++calls===1?'Page two.':'Page one.')}));
+    await page.locator('#ocrBtn').click();await page.waitForFunction(()=>activeTask===null&&state.images.every(p=>p.status==='ok'));
+    assert.equal(await page.locator('#articleInput').inputValue(),'Page two.\n\nPage one.');assert.equal(await page.locator('#tabText').isVisible(),true);assert.equal(await page.locator('#tabImage').isVisible(),false);assert.equal(dialogs,0);assert.equal(calls,2);assert.deepEqual(errors,[]);
+  }finally{await context.close();}
+});
+
+test('partial OCR failure leaves original text and global retry only fills missing images',async()=>{
+  const {page,context,errors}=await pageFixture();let calls=0;
+  try{
+    await page.locator('#articleInput').fill('Keep original.');await page.locator('[data-tab="image"]').click();
+    await page.evaluate(()=>{state.images=[{id:'one',name:'one',status:'ready',text:'',dataUrl:'data:image/png;base64,iVBORw0KGgo='},{id:'two',name:'two',status:'ready',text:'',dataUrl:'data:image/png;base64,iVBORw0KGgo='}];renderImgList();});
+    await page.unroute('https://api.deepseek.com/**');await page.route('https://api.deepseek.com/**',route=>route.fulfill({json:++calls===2?{error:{message:'failed'},choices:[]}:reply(calls===1?'First.':'Second.')}));
+    await page.locator('#ocrBtn').click();await page.waitForFunction(()=>activeTask===null&&state.images.some(p=>p.status==='error'));
+    assert.equal(await page.locator('#articleInput').inputValue(),'Keep original.');assert.equal(await page.locator('#tabImage').isVisible(),true);assert.equal(await page.locator('.img-error').count(),1);assert.match(await page.locator('#status').innerText(),/正文未替换/);
+    await page.locator('#ocrBtn').click();await page.waitForFunction(()=>activeTask===null&&state.images.every(p=>p.status==='ok'));
+    assert.equal(calls,3);assert.equal(await page.locator('#articleInput').inputValue(),'First.\n\nSecond.');assert.equal(await page.locator('#tabText').isVisible(),true);assert.deepEqual(errors,[]);
+  }finally{await context.close();}
+});
+
+test('mobile thumbnails support touch dragging without page editors',async()=>{
+  const {page,context,errors}=await pageFixture({width:390,height:844});
   try{
     await page.locator('[data-tab="image"]').click();
     const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j3ioAAAAASUVORK5CYII=','base64');
     await page.locator('#fileInput').setInputFiles([{name:'first.png',mimeType:'image/png',buffer:png},{name:'second.png',mimeType:'image/png',buffer:png}]);await page.waitForFunction(()=>imgBusy===0);
-    assert.deepEqual(await page.evaluate(()=>state.images.map(p=>p.name)),['first.png','second.png']);await page.locator('[data-page-up]').nth(1).click();assert.deepEqual(await page.evaluate(()=>state.images.map(p=>p.name)),['second.png','first.png']);
-    await page.locator('.ocr-page').nth(0).dragTo(page.locator('.ocr-page').nth(1));assert.deepEqual(await page.evaluate(()=>state.images.map(p=>p.name)),['first.png','second.png']);
-    await page.locator('[data-page-up]').nth(1).click();
-    await page.unroute('https://api.deepseek.com/**');await page.route('https://api.deepseek.com/**',route=>route.fulfill({json:++call===2?{error:{message:'failed'},choices:[]}:reply(call===1?'Page two.':'Page one.')}));
-    await page.locator('#ocrBtn').click();await page.waitForFunction(()=>activeTask===null && state.images.some(p=>p.status==='error'));await page.locator('[data-page-retry]').nth(1).click();await page.waitForFunction(()=>activeTask===null && state.images.every(p=>p.status==='ok'));
-    await page.locator('[data-page-text]').nth(0).fill('Corrected two.');await page.locator('[data-zoom]').nth(0).click();assert.equal(await page.locator('#zoomImage').isVisible(),true);await page.keyboard.press('Escape');
-    await page.locator('#articleInput').evaluate(e=>e.value='Existing.');await page.locator('#ocrAppend').click();assert.equal(await page.locator('#articleInput').inputValue(),'Existing.\n\nCorrected two.\n\nPage one.');
-    await page.locator('[data-tab="image"]').click();page.once('dialog',d=>d.dismiss());await page.locator('#ocrReplace').click();assert.match(await page.locator('#articleInput').inputValue(),/^Existing/);
-    page.once('dialog',d=>d.accept());await page.locator('#ocrReplace').click();assert.equal(await page.locator('#articleInput').inputValue(),'Corrected two.\n\nPage one.');assert.deepEqual(errors,[]);
+    await page.waitForFunction(()=>getComputedStyle(document.querySelector('.img-item')).transform==='none');const a=await page.locator('.img-item').nth(0).boundingBox(),b=await page.locator('.img-item').nth(1).boundingBox();
+    const cdp=await context.newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:a.x+a.width/2,y:a.y+a.height/2}]});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2}]});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await page.waitForFunction(()=>state.images[0].name==='second.png');assert.equal(await page.locator('#imgList textarea').count(),0);
+    assert.ok(b.x+b.width<=390);await page.waitForFunction(()=>getComputedStyle(document.querySelector('.img-item')).transform==='none');await page.screenshot({path:path.join(__dirname,'../test-results/mobile-ocr-simple.png')});assert.deepEqual(errors,[]);
   }finally{await context.close();}
 });
+
 test('mobile menus and modal / OCR layouts remain within the viewport',async()=>{
   const {page,context,errors}=await pageFixture({width:390,height:844});
   try{
@@ -182,10 +214,10 @@ test('cancel batch processing saves completed work and resume only requests miss
 test('OCR UI cancel keeps the completed page and resume skips it',async()=>{
   const {page,context,errors}=await pageFixture();let calls=0,resuming=false;
   try{
-    await page.locator('[data-tab="image"]').click();
+    await page.locator('#articleInput').fill('Original.');await page.locator('[data-tab="image"]').click();
     await page.evaluate(()=>{state.images=[{id:'one',name:'one',status:'ready',text:'',dataUrl:'data:image/png;base64,iVBORw0KGgo='},{id:'two',name:'two',status:'ready',text:'',dataUrl:'data:image/png;base64,iVBORw0KGgo='}];renderImgList();});
     await page.unroute('https://api.deepseek.com/**');await page.route('https://api.deepseek.com/**',async route=>{const n=++calls;if(n===2&&!resuming)await new Promise(r=>setTimeout(r,1200));await route.fulfill({json:reply(n===1?'First completed.':'Second completed.')}).catch(()=>{});});
-    await page.locator('#ocrBtn').click();await page.waitForFunction(()=>state.images[0].status==='ok' && state.images[1].status==='loading');await page.locator('#cancelBtn').click();await page.waitForFunction(()=>activeTask===null);assert.equal(await page.locator('[data-page-text]').first().inputValue(),'First completed.');
-    resuming=true;const before=calls;await page.locator('#ocrBtn').click();await page.waitForFunction(()=>activeTask===null && state.images.every(p=>p.status==='ok'));assert.equal(calls-before,1);assert.deepEqual(errors,[]);
+    await page.locator('#ocrBtn').click();await page.waitForFunction(()=>state.images[0].status==='ok' && state.images[1].status==='loading');await page.locator('#cancelBtn').click();await page.waitForFunction(()=>activeTask===null);assert.equal(await page.evaluate(()=>state.images[0].text),'First completed.');assert.equal(await page.locator('#articleInput').inputValue(),'Original.');assert.equal(await page.locator('#tabImage').isVisible(),true);
+    resuming=true;const before=calls;await page.locator('#ocrBtn').click();await page.waitForFunction(()=>activeTask===null && state.images.every(p=>p.status==='ok'));assert.equal(calls-before,1);assert.equal(await page.locator('#articleInput').inputValue(),'First completed.\n\nSecond completed.');assert.equal(await page.locator('#tabText').isVisible(),true);assert.deepEqual(errors,[]);
   }finally{await context.close();}
 });

@@ -95,6 +95,11 @@ body.font-sans .annotated{font-family:-apple-system,BlinkMacSystemFont,"PingFang
 .img-item img{width:100%;height:100%;object-fit:cover;display:block}
 .img-item .rm{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;transition:background .15s}
 .img-item .rm:hover{background:rgba(0,0,0,.85)}
+.img-item{touch-action:none}.img-item[draggable=true]{cursor:grab}.img-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.img-item .thumb-open{display:block;width:100%;height:100%;padding:0;border:0;background:transparent;cursor:inherit}
+.img-placeholder{display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--ink2)}
+.img-index,.img-status{position:absolute;bottom:3px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;line-height:16px;border-radius:3px;padding:0 4px;pointer-events:none}
+.img-index{left:3px}.img-status{right:3px}.img-item.img-error{border-color:#c23030}.img-error .img-status{background:#c23030}
 @keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 .panel-foot{display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid var(--line);background:#fcfbf9;flex-wrap:wrap}
 .hint{font-size:12px;color:#9aa0ab}
@@ -549,18 +554,9 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
 .study-table th:first-child,.study-table td:first-child{text-align:left}
 .study-table thead{background:var(--bg);color:var(--ink2)}
 .study-table tbody tr:last-child{font-weight:600;background:var(--accent-soft)}
-.ocr-page{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid var(--line)}
-.ocr-preview{align-self:start}.image-zoom{display:block;width:100%;padding:0;border:1px solid var(--line);background:var(--bg);cursor:zoom-in;border-radius:8px;overflow:hidden}
-.image-zoom img{display:block;width:100%;max-height:200px;object-fit:contain}
-.ocr-page-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;font-size:12px}
-.ocr-page-head span{flex:1;overflow-wrap:anywhere;color:var(--ink2)}
-.ocr-page-body label{font-size:12px;color:var(--ink2)}
-.ocr-page textarea{display:block;box-sizing:border-box;width:100%;border:1px solid var(--line);border-radius:8px;resize:vertical;padding:10px;font:14px/1.65 Georgia,serif;color:var(--ink);background:var(--card);margin-top:4px}
-.ocr-page-foot{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:8px;color:var(--ink2);font-size:12px}
 .image-modal{position:relative;width:94vw;max-width:1200px;max-height:92vh;overflow:auto;padding-top:40px}
 .image-modal img{display:block;max-width:100%;height:auto;margin:auto}
-#imgList.img-list{display:block}
-@media(max-width:900px){#bookBtn,#usageBtn{display:none}.book-layout{grid-template-columns:minmax(0,1fr);gap:12px}#bookFolders{flex-direction:row;flex-wrap:wrap}.folder-btn{padding:7px 10px}.study-modal{padding:22px 16px}.ocr-page{grid-template-columns:minmax(0,1fr);gap:10px}.ocr-preview{max-width:100%}.image-zoom img{max-height:150px}.study-actions{gap:6px}.study-table th,.study-table td{padding:7px}}
+@media(max-width:900px){#bookBtn,#usageBtn{display:none}.book-layout{grid-template-columns:minmax(0,1fr);gap:12px}#bookFolders{flex-direction:row;flex-wrap:wrap}.folder-btn{padding:7px 10px}.study-modal{padding:22px 16px}.study-actions{gap:6px}.study-table th,.study-table td{padding:7px}}
 @media print{#cancelBtn,#bookModal,#usageModal,#imageModal,#lookupModal{display:none!important}}
 /* Keep the added tools reachable before the full desktop toolbar stops fitting. */
 @media(max-width:1280px){#modeToggle,#transBtn,#glossBtn,#fontBtn,#printBtn,#cacheBtn,#promptBtn,#bookBtn,#usageBtn,#lookupBtn{display:none}.more-wrap{display:block}.ver{display:none}}
@@ -641,11 +637,10 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
           <div class="dropzone" id="dropzone">
             <div class="dz-icon">🖼️</div>
             点击选择图片，或拖拽 / 粘贴截图到此处
-            <small>支持 JPG / PNG / WebP，多图按顺序识别；上传后由 DeepSeek 转录为文本，可再人工校对</small>
+            <small>支持 JPG / PNG / WebP，拖动缩略图调整顺序；识别后自动替换正文并返回文本页面</small>
             <input type="file" id="fileInput" accept="image/*" multiple hidden>
           </div>
           <div class="img-list" id="imgList"></div>
-          <div class="study-actions" id="ocrApply" hidden><button class="btn" id="ocrAppend">追加校对文字到正文</button><button class="btn" id="ocrReplace">替换正文</button></div>
         </div>
       </div>
       <div class="progress-wrap" id="progressWrap">
@@ -818,7 +813,7 @@ body.mode-hover .p-detail:hover .trans{opacity:1;visibility:visible}
    常量与配置
    ============================================================ */
 const API_URL = 'https://api.deepseek.com/chat/completions';
-const APP_VERSION = '1.5.1';            // 版本号：顶栏徽标 / 页脚 / README 保持一致
+const APP_VERSION = '1.5.2';            // 版本号：顶栏徽标 / 页脚 / README 保持一致
 const MODEL   = 'deepseek-flash';       // 官方模型名（旧名 deepseek-v4-flash 已下线）
 const MODEL_LABEL = 'DeepSeek V4.1 Flash';
 const BATCH_SIZE = 5;                   // 每批句子数
@@ -4211,64 +4206,89 @@ function moveOcrPage(id,beforeId){
 function renderImgList(){
   if(!$('#imgList'))return;
   const locked=!!activeTask;
-  $('#imgList').innerHTML=state.images.map((p,i)=>`<div class="ocr-page" data-page-id="${escA(p.id)}" draggable="${!locked}"><div class="ocr-preview">${p.dataUrl?`<button class="image-zoom" data-zoom="${escA(p.id)}" aria-label="放大第 ${i+1} 页"><img src="${escA(p.dataUrl)}" alt="第 ${i+1} 页"></button>`:'<p>正在处理图片…</p>'}</div><div class="ocr-page-body"><div class="ocr-page-head"><b>第 ${i+1} 页</b><span>${esc(p.name)}</span><button class="mini-btn" data-page-up="${escA(p.id)}"${locked||i===0?' disabled':''} aria-label="上移第 ${i+1} 页">↑</button><button class="mini-btn" data-page-down="${escA(p.id)}"${locked||i===state.images.length-1?' disabled':''} aria-label="下移第 ${i+1} 页">↓</button><button class="mini-btn" data-page-remove="${escA(p.id)}"${locked?' disabled':''}>移除</button></div><label>校对文字<textarea data-page-text="${escA(p.id)}" rows="6" placeholder="识别后可在这里校对"${p.status==='loading'?' disabled':''}>${esc(p.text)}</textarea></label><div class="ocr-page-foot"><span>${p.status==='processing'?'图片处理中':p.status==='loading'?'正在识别…':p.error?esc(p.error):p.status==='ok'?'识别完成，可校对':'等待识别'}</span>${p.dataUrl?`<button class="mini-btn" data-page-retry="${escA(p.id)}"${locked||imgBusy?' disabled':''}>${p.status==='ok'?'重新识别本页':'识别／重试本页'}</button>`:''}</div></div></div>`).join('');
-  $('#ocrApply').hidden=!state.images.length;
-  $('#ocrAppend').disabled=locked;$('#ocrReplace').disabled=locked;
+  $('#imgList').innerHTML=state.images.map((p,i)=>{
+    const status=p.status==='processing'?'处理中':p.status==='loading'?'识别中':p.status==='error'?'失败':p.status==='ok'?'已识别':'';
+    return `<div class="img-item${p.status==='error'?' img-error':''}" data-page-id="${escA(p.id)}" draggable="${!locked}" tabindex="0" aria-label="第 ${i+1} 张：${escA(p.name)}${status?'，'+status:''}" title="${escA(p.error||p.name)} · 拖动调整顺序，方向键也可排序">${p.dataUrl?`<button class="thumb-open" data-zoom="${escA(p.id)}" aria-label="放大第 ${i+1} 张"><img src="${escA(p.dataUrl)}" alt="待识别图片 ${i+1}" draggable="false"></button>`:'<span class="img-placeholder">'+(p.status==='error'?'读取失败':'处理中…')+'</span>'}<span class="img-index">${i+1}</span>${status?`<span class="img-status">${status}</span>`:''}<button class="rm" data-page-remove="${escA(p.id)}" title="移除" aria-label="移除第 ${i+1} 张"${locked?' disabled':''}>✕</button></div>`;
+  }).join('');
 }
-async function startOcr(pageId){
+function useOcrText(){
+  if(!state.images.length || state.images.some(p=>p.status!=='ok'||!p.text.trim()))return false;
+  const text=state.images.map(p=>p.text.trim()).join('\n\n');
+  $('#articleInput').value=text;selectTab('text');
+  setStatus(`识别完成，已替换正文（约 ${text.split(/\s+/).length} 词），可开始分析`,'ok');
+  return true;
+}
+async function startOcr(){
   if(activeTask||imgBusy)return;
+  if(!state.images.length){setStatus('请先添加图片','err');return;}
+  if(state.images.some(p=>!p.dataUrl)){setStatus('有图片读取失败，请移除后重新上传','err');return;}
+  const pages=state.images.filter(p=>p.status!=='ok');
+  if(!pages.length){useOcrText();return;}
   if(!requireKey())return;
-  let pages=pageId?state.images.filter(p=>p.id===pageId && p.dataUrl):state.images.filter(p=>p.dataUrl && p.status!=='ok');
-  if(!pages.length){setStatus('没有待识别图片；已完成的文字可直接校对或应用','ok');return;}
-  if(pageId && pages[0].text && !confirm('重新识别将替换本页已校对的文字。继续吗？'))return;
   const task=beginTask('ocr');if(!task)return;$('#cancelBtn').disabled=false;
   $('#ocrBtn').textContent='识别中…';
   let done=0;
   try{
     for(const page of pages){
       checkTask(task);page.status='loading';page.error='';renderImgList();
-      setProgress(done,pages.length,`正在识别第 ${state.images.indexOf(page)+1} 页（${done+1}/${pages.length}）`);
+      setProgress(done,pages.length,`正在识别第 ${state.images.indexOf(page)+1} 张图片（${done+1}/${pages.length}）`);
       try{
         const text=(await callAPI([{role:'user',content:[{type:'text',text:'请逐字转录图片中的英文文章正文。只输出英文原文，保留拼写、大小写和标点；段落之间用空行分隔。不输出解释、翻译、markdown 标记。'}, {type:'image_url',image_url:{url:page.dataUrl}}]}],{json:false,task,kind:'ocr'})).trim();
         checkTask(task);if(!text)throw new Error('识别结果为空');page.text=text;page.status='ok';
       }catch(err){if(isCanceled(err)){page.status=page.text?'ok':'ready';throw err;}page.status='error';page.error=err.message;}
       done++;renderImgList();
     }
+    checkTask(task);
     const bad=pages.filter(p=>p.status==='error').length;
-    setStatus(`识别完成${bad?'，'+bad+' 页失败，可单独重试':''}；请对照原图校对后追加或替换正文`,bad?'err':'ok');
-  }catch(err){setStatus(isCanceled(err)?'已取消识别，已完成页面和校对文字均保留':'识别失败：'+err.message,isCanceled(err)?'ok':'err');}
+    if(bad)setStatus(`${bad} 张图片识别失败，正文未替换；再次点击识别补齐失败图片`,'err');
+    else useOcrText();
+  }catch(err){setStatus(isCanceled(err)?'已取消识别，正文未替换；再次点击识别继续':'识别失败：'+err.message,isCanceled(err)?'ok':'err');}
   finally{$('#ocrBtn').textContent='识别图片文字';hideProgress();endTask(task);}
 }
-function applyOcrText(replace){
-  if(activeTask)return;
-  const text=state.images.map(p=>p.text.trim()).filter(Boolean).join('\n\n');
-  if(!text){setStatus('没有可应用的识别文字','err');return;}
-  if(state.images.some(p=>!p.text.trim()) && !confirm('有图片尚无文字，只应用已识别／校对的页面？'))return;
-  const existing=$('#articleInput').value.trim();
-  if(replace && existing && !confirm('替换会覆盖当前正文。确定继续？'))return;
-  $('#articleInput').value=replace?text:[existing,text].filter(Boolean).join('\n\n');selectTab('text');
-  setStatus('校对文字已'+(replace?'替换':'追加到')+'正文，可开始分析','ok');
-}
 function initOcrUI(){
-  $('#ocrAppend').onclick=()=>applyOcrText(false);$('#ocrReplace').onclick=()=>applyOcrText(true);
   const list=$('#imgList');
-  list.addEventListener('input',e=>{const id=e.target.dataset.pageText;if(id){const p=state.images.find(x=>x.id===id);if(p)p.text=e.target.value;}});
+  let suppressClickUntil=0;
   list.addEventListener('click',e=>{
+    if(performance.now()<suppressClickUntil){e.preventDefault();e.stopPropagation();return;}
     const b=e.target.closest('button');if(!b)return;
     const d=b.dataset;
     if(d.zoom){const p=state.images.find(x=>x.id===d.zoom);if(p){$('#zoomImage').src=p.originalUrl||p.dataUrl;$('#imageModal').classList.add('show');}return;}
     if(activeTask)return;
-    if(d.pageRetry){startOcr(d.pageRetry);return;}
-    const id=d.pageUp||d.pageDown||d.pageRemove,i=state.images.findIndex(x=>x.id===id);if(i<0)return;
-    if(d.pageRemove){if(state.images[i].text && !confirm('移除本页及校对文字？'))return;state.images.splice(i,1);}
-    else{const j=i+(d.pageUp?-1:1);if(j>=0 && j<state.images.length)[state.images[i],state.images[j]]=[state.images[j],state.images[i]];}
-    renderImgList();
+    if(d.pageRemove){const i=state.images.findIndex(p=>p.id===d.pageRemove);if(i>=0){state.images.splice(i,1);renderImgList();}}
+  });
+  list.addEventListener('keydown',e=>{
+    if(activeTask||e.target.closest('button'))return;
+    const page=e.target.closest('[data-page-id]');if(!page)return;
+    const delta=['ArrowLeft','ArrowUp'].includes(e.key)?-1:['ArrowRight','ArrowDown'].includes(e.key)?1:0;
+    if(!delta)return;e.preventDefault();
+    const i=state.images.findIndex(p=>p.id===page.dataset.pageId),j=i+delta;
+    if(i<0||j<0||j>=state.images.length)return;
+    [state.images[i],state.images[j]]=[state.images[j],state.images[i]];renderImgList();
+    list.querySelectorAll('[data-page-id]')[j]?.focus();
   });
   let dragged='';
-  list.addEventListener('dragstart',e=>{const page=e.target.closest('[data-page-id]');if(activeTask||!page){e.preventDefault();return;}dragged=page.dataset.pageId;e.dataTransfer.setData('text/plain',dragged);});
-  list.addEventListener('dragover',e=>{if(dragged && !activeTask)e.preventDefault();});
-  list.addEventListener('drop',e=>{const target=e.target.closest('[data-page-id]');if(target && dragged){e.preventDefault();moveOcrPage(dragged,target.dataset.pageId);}dragged='';});
+  list.addEventListener('dragstart',e=>{const page=e.target.closest('[data-page-id]');if(activeTask||!page||e.target.closest('.rm')){e.preventDefault();return;}dragged=page.dataset.pageId;e.dataTransfer.setData('text/plain',dragged);e.dataTransfer.effectAllowed='move';});
+  list.addEventListener('dragover',e=>{if(dragged && !activeTask){e.preventDefault();e.dataTransfer.dropEffect='move';}});
+  list.addEventListener('drop',e=>{const target=e.target.closest('[data-page-id]');if(target && dragged){e.preventDefault();moveOcrPage(dragged,target.dataset.pageId);}dragged='';suppressClickUntil=performance.now()+400;});
   list.addEventListener('dragend',()=>dragged='');
+  // Native HTML dragging covers desktop; Pointer Events provide the same order on touch screens.
+  let touchDrag=null;
+  list.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='touch'||activeTask||e.target.closest('.rm'))return;
+    const page=e.target.closest('[data-page-id]');if(!page)return;
+    touchDrag={id:page.dataset.pageId,pointer:e.pointerId,x:e.clientX,y:e.clientY,moved:false};
+    try{list.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  list.addEventListener('pointermove',e=>{if(touchDrag?.pointer===e.pointerId && Math.hypot(e.clientX-touchDrag.x,e.clientY-touchDrag.y)>8)touchDrag.moved=true;});
+  list.addEventListener('pointerup',e=>{
+    if(touchDrag?.pointer!==e.pointerId)return;
+    const drag=touchDrag;touchDrag=null;
+    if(!drag.moved)return;
+    const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-page-id]');
+    if(target && list.contains(target))moveOcrPage(drag.id,target.dataset.pageId);
+    suppressClickUntil=performance.now()+400;e.preventDefault();
+  });
+  list.addEventListener('pointercancel',()=>touchDrag=null);
   $('#imageModal').onclick=e=>{if(e.target.id==='imageModal'||e.target.closest('[data-study-close]'))$('#imageModal').classList.remove('show');};
 }
 

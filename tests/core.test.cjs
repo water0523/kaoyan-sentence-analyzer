@@ -1,7 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {runtime,html}=require('./runtime.cjs');
 const plain=x=>JSON.parse(JSON.stringify(x));
-test('all page scripts initialize, including permanent book and usage UI',()=>{const r=runtime();assert.equal(r.run('APP_VERSION'),'1.5.1');assert.equal(r.run('vocabBook.defaultFolderId'),'inbox');});
+test('all page scripts initialize, including permanent book and usage UI',()=>{const r=runtime();assert.equal(r.run('APP_VERSION'),'1.5.2');assert.equal(r.run('vocabBook.defaultFolderId'),'inbox');});
 test('partial / total failure complete without a scope error',async()=>{
   for(const successes of [0,1]){
     const r=runtime();r.run(`state.apiKey='test';$('#articleInput').value='He works. She left.';splitArticle=async()=>[['He works.','She left.']];runBatches=async list=>list.forEach((s,i)=>{s.status=i<${successes}?'ok':'error';s.data=i<${successes}?{segments:[{text:s.text,type:'subject'}]}:null;});`);
@@ -117,8 +117,19 @@ test('request cancellation respects both explicit signal and owning task',async(
     await assert.rejects(pending,e=>e.name==='AbortError');assert.equal(r.run('usageTotals.analysis.requests'),1);r.run('endTask(apiTask)');
   }
 });
-test('OCR cancellation preserves completed pages and manual text',async()=>{
+test('OCR cancellation preserves completed image results and original text',async()=>{
   const r=runtime();r.run(`state.apiKey='test';state.images=[{id:'1',name:'1',dataUrl:'a',status:'ready',text:''},{id:'2',name:'2',dataUrl:'b',status:'ready',text:'manual'}];`);let calls=0;
   r.ctx.callAPI=async(messages,{task})=>{if(++calls===1)return 'page one';return new Promise((resolve,reject)=>task.controller.signal.addEventListener('abort',()=>{const e=new Error();e.name='AbortError';reject(e);},{once:true}));};
-  const pending=r.run('startOcr()');await new Promise(x=>setImmediate(x));r.run('cancelActiveTask()');await pending;assert.deepEqual(plain(r.run('state.images.map(p=>p.text)')),['page one','manual']);assert.equal(r.run('activeTask'),null);
+  r.run(`$('#articleInput').value='original'`);
+  const pending=r.run('startOcr()');await new Promise(x=>setImmediate(x));r.run('cancelActiveTask()');await pending;assert.deepEqual(plain(r.run('state.images.map(p=>p.text)')),['page one','manual']);assert.equal(r.run('activeTask'),null);assert.equal(r.node('#articleInput').value,'original');
+});
+test('OCR automatically applies all results in current order without confirmation or new calls',async()=>{
+  const r=runtime();r.run(`state.images=[{id:'a',dataUrl:'a',status:'ok',text:'first'},{id:'b',dataUrl:'b',status:'ok',text:'second'}];$('#articleInput').value='original';confirm=()=>{throw Error('unexpected confirmation')};callAPI=()=>{throw Error('unexpected request')};moveOcrPage('a','b');`);
+  await r.run('startOcr()');assert.equal(r.node('#articleInput').value,'second\n\nfirst');assert.equal(r.node('#tabImage').style.display,'none');
+});
+test('OCR read errors and partial failures do not replace original text',async()=>{
+  const r=runtime();r.run(`state.apiKey='test';$('#articleInput').value='original';state.images=[{id:'a',dataUrl:'',status:'error',text:''}];callAPI=()=>{throw Error('must not request unreadable image')};`);
+  await r.run('startOcr()');assert.equal(r.node('#articleInput').value,'original');assert.match(r.node('#status').textContent,/读取失败/);
+  r.run(`state.images=[{id:'a',dataUrl:'a',status:'ready',text:''},{id:'b',dataUrl:'b',status:'ready',text:''}];let n=0;callAPI=async()=>{if(++n===1)return 'first';throw Error('failed')};`);
+  await r.run('startOcr()');assert.equal(r.node('#articleInput').value,'original');assert.equal(r.run('state.images[0].text'),'first');assert.match(r.node('#status').textContent,/正文未替换/);
 });
